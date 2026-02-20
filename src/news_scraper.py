@@ -134,6 +134,14 @@ def extract_published_date_from_soup(soup: BeautifulSoup) -> str:
     return ""
 
 
+def resolve_cutoff_date(months_back: int, start_date: date | str | None = None) -> date:
+    if isinstance(start_date, date):
+        return start_date
+    if isinstance(start_date, str):
+        return date.fromisoformat(start_date)
+    return date.today() - timedelta(days=30 * months_back)
+
+
 def scrape_article(url: str, config: SiteConfig) -> dict[str, str] | None:
     try:
         response = requests.get(
@@ -350,11 +358,12 @@ def fetch_links_from_api(
 def collect_articles(
     config: SiteConfig,
     months_back: int = 6,
+    start_date: date | str | None = None,
     max_articles: int | None = None,
     progress_every: int = 25,
 ) -> list[dict[str, str]]:
     started = perf_counter()
-    cutoff = date.today() - timedelta(days=30 * months_back)
+    cutoff = resolve_cutoff_date(months_back=months_back, start_date=start_date)
     print(f"[{config.name}] Cutoff date: {cutoff}")
 
     candidate_urls = get_links_from_list_pages(config)
@@ -398,6 +407,7 @@ def collect_articles(
 def collect_multiple_sites(
     configs: list[SiteConfig],
     months_back: int = 6,
+    start_date: date | str | None = None,
     max_articles_per_site: int | None = None,
     progress_every: int = 25,
 ) -> list[dict[str, str]]:
@@ -407,6 +417,7 @@ def collect_multiple_sites(
         rows = collect_articles(
             config,
             months_back=months_back,
+            start_date=start_date,
             max_articles=max_articles_per_site,
             progress_every=progress_every,
         )
@@ -554,8 +565,9 @@ def validate_site_config(
     config: SiteConfig,
     sample_size: int = 5,
     months_back: int = 6,
+    start_date: date | str | None = None,
 ) -> list[dict[str, str]]:
-    cutoff = date.today() - timedelta(days=30 * months_back)
+    cutoff = resolve_cutoff_date(months_back=months_back, start_date=start_date)
     candidate_set = get_links_from_list_pages(config).union(fetch_links_from_api(config, cutoff_date=cutoff))
 
     candidate_urls = sorted(candidate_set)
@@ -585,6 +597,7 @@ def validate_site_config(
 def validate_requested_malaysia_site_configs(
     sample_size: int = 5,
     months_back: int = 6,
+    start_date: date | str | None = None,
 ) -> dict[str, list[dict[str, str]]]:
     report: dict[str, list[dict[str, str]]] = {}
     for config in build_requested_malaysia_site_configs():
@@ -592,6 +605,7 @@ def validate_requested_malaysia_site_configs(
             config,
             sample_size=sample_size,
             months_back=months_back,
+            start_date=start_date,
         )
     return report
 
