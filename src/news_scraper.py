@@ -553,10 +553,10 @@ def build_malaysiakini_config() -> SiteConfig:
 
 def build_requested_malaysia_site_configs() -> list[SiteConfig]:
     return [
-        # build_freemalaysiatoday_config(),
-        # build_theedgemalaysia_config("politics"),
-        # build_theedgemalaysia_config("economy"),
-        # build_theedgemalaysia_config("corporate"),
+        build_freemalaysiatoday_config(),
+        build_theedgemalaysia_config("politics"),
+        build_theedgemalaysia_config("economy"),
+        build_theedgemalaysia_config("corporate"),
         build_malaysiakini_config(),
     ]
 
@@ -612,5 +612,9 @@ def validate_requested_malaysia_site_configs(
 
 if __name__ == "__main__":
     configs = build_requested_malaysia_site_configs()
-    rows = collect_multiple_sites(configs, months_back=6, max_articles_per_site=None)
-    save_articles_csv(rows, "malaysia_news_last_6_months.csv")
+    rows = collect_multiple_sites(
+        configs,
+        start_date="2023-01-01",
+        max_articles_per_site=None,
+    )
+    save_articles_csv(rows, "malaysia_news_since_2023.csv")
