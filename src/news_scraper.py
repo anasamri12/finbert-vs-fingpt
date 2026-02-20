@@ -8,6 +8,7 @@ import re
 import time
 from time import perf_counter
 from urllib.parse import urljoin
+import xml.etree.ElementTree as ET
 
 import requests
 from bs4 import BeautifulSoup
@@ -45,6 +46,7 @@ class SiteConfig:
     request_headers: dict[str, str] = field(default_factory=lambda: {"User-Agent": "Mozilla/5.0"})
     timeout_seconds: int = 20
     api_pagination: ApiPaginationConfig | None = None
+    sitemap_urls: list[str] = field(default_factory=list)
     body_parser: ParserFunc | None = None
     blocked_url_regexes: list[str] = field(default_factory=list)
 
@@ -207,6 +209,7 @@ def get_links_from_list_pages(config: SiteConfig) -> set[str]:
             if not href:
                 continue
             full_url = urljoin(config.base_url, href)
+            full_url = full_url.split("#", 1)[0].strip()
             if allowed.search(full_url):
                 is_blocked = any(re.search(p, full_url) for p in config.blocked_url_regexes)
                 if is_blocked:
@@ -224,6 +227,102 @@ def _extract_edge_url(edge: dict[str, Any], keys: tuple[str, ...]) -> str | None
         if value:
             return str(value)
     return None
+
+
+def _sitemap_month_from_url(url: str) -> date | None:
+    match = re.search(r"\.(\d{4})(\d{2})\.xml(?:\.gz)?$", url)
+    if not match:
+        return None
+    year = int(match.group(1))
+    month = int(match.group(2))
+    try:
+        return date(year, month, 1)
+    except ValueError:
+        return None
+
+
+def _is_old_sitemap_month(sitemap_url: str, cutoff_date: date | None) -> bool:
+    if cutoff_date is None:
+        return False
+    month_date = _sitemap_month_from_url(sitemap_url)
+    if month_date is None:
+        return False
+    cutoff_month = date(cutoff_date.year, cutoff_date.month, 1)
+    return month_date < cutoff_month
+
+
+def _is_known_bad_sitemap(sitemap_url: str) -> bool:
+    return sitemap_url.rstrip("/").endswith("sitemap-root.xml")
+
+
+def fetch_links_from_sitemaps(
+    config: SiteConfig,
+    cutoff_date: date | None = None,
+    max_links: int | None = None,
+) -> set[str]:
+    if not config.sitemap_urls:
+        return set()
+
+    allowed = config.allowed_url_pattern()
+    date_pattern = config.date_url_pattern()
+    links: set[str] = set()
+    to_visit = list(config.sitemap_urls)
+    visited: set[str] = set()
+
+    while to_visit:
+        sitemap_url = to_visit.pop(0)
+        if sitemap_url in visited:
+            continue
+        visited.add(sitemap_url)
+        if _is_known_bad_sitemap(sitemap_url):
+            continue
+        if _is_old_sitemap_month(sitemap_url, cutoff_date):
+            continue
+
+        try:
+            response = requests.get(sitemap_url, headers=config.request_headers, timeout=config.timeout_seconds)
+            response.raise_for_status()
+            root = ET.fromstring(response.text)
+        except (requests.RequestException, ET.ParseError) as exc:
+            print(f"[{config.name}] Sitemap fetch/parse failed {sitemap_url}: {exc}")
+            continue
+
+        child_sitemaps = [
+            node.text.strip()
+            for node in root.findall(".//{*}sitemap/{*}loc")
+            if node.text and node.text.strip()
+        ]
+        if child_sitemaps:
+            for child in child_sitemaps:
+                if (
+                    child not in visited
+                    and not _is_known_bad_sitemap(child)
+                    and not _is_old_sitemap_month(child, cutoff_date)
+                ):
+                    to_visit.append(child)
+            continue
+
+        url_entries = [
+            node.text.strip()
+            for node in root.findall(".//{*}url/{*}loc")
+            if node.text and node.text.strip()
+        ]
+        for entry in url_entries:
+            full_url = urljoin(config.base_url, entry)
+            is_blocked = any(re.search(p, full_url) for p in config.blocked_url_regexes)
+            if not allowed.search(full_url) or is_blocked:
+                continue
+            if cutoff_date is not None:
+                url_date = get_date_from_url(full_url, date_pattern)
+                if url_date is not None and url_date < cutoff_date:
+                    continue
+            links.add(full_url)
+            if max_links is not None and len(links) >= max_links:
+                print(f"[{config.name}] Sitemap links reached max_links={max_links}")
+                return links
+
+    print(f"[{config.name}] Sitemaps yielded {len(links)} unique links")
+    return links
 
 
 def extract_malaysiakini_stories(data: dict[str, Any]) -> list[dict[str, Any]]:
@@ -371,6 +470,7 @@ def collect_articles(
     if max_articles is not None:
         # Keep a buffer above max_articles because some URLs will fail or have empty body.
         target_candidates = max(max_articles * 2, max_articles + 100)
+    candidate_urls.update(fetch_links_from_sitemaps(config, cutoff_date=cutoff, max_links=target_candidates))
     candidate_urls.update(fetch_links_from_api(config, cutoff_date=cutoff, max_links=target_candidates))
     print(f"[{config.name}] Candidate URLs: {len(candidate_urls)}")
 
@@ -460,6 +560,9 @@ def build_freemalaysiatoday_config() -> SiteConfig:
             max_pages=200,
             sleep_seconds=0.1,
         ),
+        sitemap_urls=[
+            "https://cms.freemalaysiatoday.com/sitemap.xml",
+        ],
     )
 
 
@@ -551,13 +654,35 @@ def build_malaysiakini_config() -> SiteConfig:
     )
 
 
+def build_businesstoday_config() -> SiteConfig:
+    base = "https://www.businesstoday.com.my"
+    marketing_pages = [f"{base}/category/marketing/"]
+    marketing_pages.extend(f"{base}/category/marketing/page/{idx}/" for idx in range(2, 527))
+    return SiteConfig(
+        name="businesstoday_marketing",
+        base_url=base,
+        list_urls=marketing_pages,
+        allowed_url_regex=r"https://www\.businesstoday\.com\.my/\d{4}/\d{2}/\d{2}/[^?#/]+/?$",
+        category_label="marketing",
+        article_title_selector="h1, .entry-title",
+        article_body_selector=".entry-content p, .td-post-content p, .post-content p, article .entry-content p",
+        date_from_url_regex=r"/(\d{4})/(\d{2})/(\d{2})/",
+        blocked_url_regexes=[
+            r"/about-reach-publishing/?$",
+            r"/join-us/?$",
+            r"/subscribe-to-the-print-edition/?$",
+        ],
+    )
+
+
 def build_requested_malaysia_site_configs() -> list[SiteConfig]:
     return [
         build_freemalaysiatoday_config(),
-        build_theedgemalaysia_config("politics"),
-        build_theedgemalaysia_config("economy"),
-        build_theedgemalaysia_config("corporate"),
-        build_malaysiakini_config(),
+        build_businesstoday_config(),
+        # build_theedgemalaysia_config("politics"),
+        # build_theedgemalaysia_config("economy"),
+        # build_theedgemalaysia_config("corporate"),
+        # build_malaysiakini_config(),
     ]
 
 
@@ -568,7 +693,11 @@ def validate_site_config(
     start_date: date | str | None = None,
 ) -> list[dict[str, str]]:
     cutoff = resolve_cutoff_date(months_back=months_back, start_date=start_date)
-    candidate_set = get_links_from_list_pages(config).union(fetch_links_from_api(config, cutoff_date=cutoff))
+    candidate_set = (
+        get_links_from_list_pages(config)
+        .union(fetch_links_from_sitemaps(config, cutoff_date=cutoff))
+        .union(fetch_links_from_api(config, cutoff_date=cutoff))
+    )
 
     candidate_urls = sorted(candidate_set)
     candidate_urls = candidate_urls[:sample_size]
@@ -617,4 +746,4 @@ if __name__ == "__main__":
         start_date="2023-01-01",
         max_articles_per_site=None,
     )
-    save_articles_csv(rows, "malaysia_news_since_2023.csv")
+    save_articles_csv(rows, "malaysia_news_since_2023_fmt_bt.csv")
