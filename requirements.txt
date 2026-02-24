@@ -3,3 +3,13 @@ beautifulsoup4
 pandas
 jupyter
 ipykernel
+kagglehub
+datasets
+transformers
+scikit-learn
+numpy
+torch
+accelerate
+peft
+trl
+bitsandbytes
