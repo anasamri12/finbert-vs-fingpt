@@ -43,6 +43,24 @@ def infer_column(df: pd.DataFrame, candidates: tuple[str, ...], kind: str) -> st
     raise ValueError(f"Could not infer {kind} column. Available columns: {list(df.columns)}")
 
 
+def load_kaggle_table(csv_path: str) -> pd.DataFrame:
+    df = pd.read_csv(csv_path)
+    try:
+        infer_column(df, TEXT_CANDIDATES, "text")
+        infer_column(df, LABEL_CANDIDATES, "label")
+        return df
+    except ValueError:
+        pass
+
+    # Fallback for headerless files like: <headline>,<label>
+    raw = pd.read_csv(csv_path, header=None)
+    if raw.shape[1] >= 2:
+        raw = raw.iloc[:, :2].copy()
+        raw.columns = ["text", "label"]
+        return raw
+    return df
+
+
 def map_labels(series: pd.Series) -> pd.Series:
     raw = series.astype(str).str.strip().str.lower()
     mapping = {
@@ -157,9 +175,9 @@ def main() -> None:
     csv_path = csv_files[0]
     print(f"Using dataset file: {csv_path}")
 
-    df = pd.read_csv(csv_path)
-    text_col = infer_column(df, TEXT_CANDIDATES, "text")
-    label_col = infer_column(df, LABEL_CANDIDATES, "label")
+    df = load_kaggle_table(csv_path)
+    text_col = infer_column(df, TEXT_CANDIDATES + ("text",), "text")
+    label_col = infer_column(df, LABEL_CANDIDATES + ("label",), "label")
     print(f"Inferred columns -> text: {text_col}, label: {label_col}")
 
     clean = df[[text_col, label_col]].copy()
