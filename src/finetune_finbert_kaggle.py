@@ -2,14 +2,16 @@ from __future__ import annotations
 
 import argparse
 import glob
+import json
 import os
 from dataclasses import dataclass
+from pathlib import Path
 
 import kagglehub
 import numpy as np
 import pandas as pd
 from datasets import Dataset
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, precision_recall_fscore_support
 from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
@@ -20,6 +22,7 @@ from transformers import (
 
 TEXT_CANDIDATES = ("headline", "title", "text", "news", "sentence")
 LABEL_CANDIDATES = ("sentiment", "label", "labels", "target", "class")
+LABEL_NAMES = ["negative", "neutral", "positive"]
 
 
 @dataclass
@@ -88,6 +91,9 @@ def compute_metrics(eval_pred: tuple[np.ndarray, np.ndarray]) -> dict[str, float
     p_macro, r_macro, f1_macro, _ = precision_recall_fscore_support(
         labels, preds, average="macro", zero_division=0
     )
+    p_weighted, r_weighted, f1_weighted, _ = precision_recall_fscore_support(
+        labels, preds, average="weighted", zero_division=0
+    )
     p_cls, r_cls, f1_cls, _ = precision_recall_fscore_support(
         labels, preds, labels=[0, 1, 2], average=None, zero_division=0
     )
@@ -96,6 +102,9 @@ def compute_metrics(eval_pred: tuple[np.ndarray, np.ndarray]) -> dict[str, float
         "f1_macro": f1_macro,
         "precision_macro": p_macro,
         "recall_macro": r_macro,
+        "precision_weighted": p_weighted,
+        "recall_weighted": r_weighted,
+        "f1_weighted": f1_weighted,
         "precision_negative": p_cls[0],
         "recall_negative": r_cls[0],
         "f1_negative": f1_cls[0],
@@ -106,6 +115,33 @@ def compute_metrics(eval_pred: tuple[np.ndarray, np.ndarray]) -> dict[str, float
         "recall_positive": r_cls[2],
         "f1_positive": f1_cls[2],
     }
+
+
+def save_test_reports(output_dir: str, labels: np.ndarray, preds: np.ndarray, metrics: dict[str, float]) -> None:
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+
+    report_text = classification_report(
+        labels, preds, labels=[0, 1, 2], target_names=LABEL_NAMES, digits=6, zero_division=0
+    )
+    report_json = classification_report(
+        labels, preds, labels=[0, 1, 2], target_names=LABEL_NAMES, output_dict=True, zero_division=0
+    )
+    matrix = confusion_matrix(labels, preds, labels=[0, 1, 2])
+    matrix_df = pd.DataFrame(
+        matrix,
+        index=[f"true_{name}" for name in LABEL_NAMES],
+        columns=[f"pred_{name}" for name in LABEL_NAMES],
+    )
+
+    with (out / "test_metrics.json").open("w", encoding="utf-8") as f:
+        json.dump({k: float(v) for k, v in metrics.items()}, f, indent=2, sort_keys=True)
+    with (out / "classification_report.txt").open("w", encoding="utf-8") as f:
+        f.write(report_text)
+        f.write("\n")
+    with (out / "classification_report.json").open("w", encoding="utf-8") as f:
+        json.dump(report_json, f, indent=2, sort_keys=True)
+    matrix_df.to_csv(out / "confusion_matrix.csv")
 
 
 def to_hf_dataset(df: pd.DataFrame, tokenizer: AutoTokenizer, max_length: int) -> Dataset:
@@ -185,8 +221,13 @@ def main() -> None:
     )
 
     trainer.train()
-    metrics = trainer.evaluate(test_ds)
-    print("Test metrics:", metrics)
+    pred_output = trainer.predict(test_ds)
+    test_metrics = compute_metrics((pred_output.predictions, pred_output.label_ids))
+    if "test_loss" in pred_output.metrics:
+        test_metrics["loss"] = float(pred_output.metrics["test_loss"])
+    print("Test metrics:", test_metrics)
+    test_preds = np.argmax(pred_output.predictions, axis=-1)
+    save_test_reports(args.output_dir, pred_output.label_ids, test_preds, test_metrics)
 
     trainer.save_model(args.output_dir)
     tokenizer.save_pretrained(args.output_dir)

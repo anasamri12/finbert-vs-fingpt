@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import argparse
 import glob
+import json
 import os
 from dataclasses import dataclass
+from pathlib import Path
 
 import kagglehub
 import numpy as np
@@ -11,7 +13,7 @@ import pandas as pd
 import torch
 from datasets import Dataset
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, precision_recall_fscore_support
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -125,7 +127,7 @@ def evaluate_generation(
     df: pd.DataFrame,
     max_new_tokens: int = 4,
     max_eval_rows: int | None = 1000,
-) -> dict[str, float]:
+) -> tuple[dict[str, float], list[int], list[int]]:
     eval_df = df if max_eval_rows is None else df.iloc[:max_eval_rows]
     preds: list[int] = []
     gold: list[int] = []
@@ -149,15 +151,21 @@ def evaluate_generation(
     p_macro, r_macro, f1_macro, _ = precision_recall_fscore_support(
         gold, preds, average="macro", zero_division=0
     )
+    p_weighted, r_weighted, f1_weighted, _ = precision_recall_fscore_support(
+        gold, preds, average="weighted", zero_division=0
+    )
     p_cls, r_cls, f1_cls, _ = precision_recall_fscore_support(
         gold, preds, labels=[0, 1, 2], average=None, zero_division=0
     )
 
-    return {
+    metrics = {
         "accuracy": accuracy_score(gold, preds),
         "f1_macro": f1_macro,
         "precision_macro": p_macro,
         "recall_macro": r_macro,
+        "precision_weighted": p_weighted,
+        "recall_weighted": r_weighted,
+        "f1_weighted": f1_weighted,
         "precision_negative": p_cls[0],
         "recall_negative": r_cls[0],
         "f1_negative": f1_cls[0],
@@ -168,6 +176,39 @@ def evaluate_generation(
         "recall_positive": r_cls[2],
         "f1_positive": f1_cls[2],
     }
+    return metrics, gold, preds
+
+
+def save_test_reports(output_dir: str, labels: list[int], preds: list[int], metrics: dict[str, float]) -> None:
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+
+    report_text = classification_report(
+        labels, preds, labels=[0, 1, 2], target_names=["negative", "neutral", "positive"], digits=6, zero_division=0
+    )
+    report_json = classification_report(
+        labels,
+        preds,
+        labels=[0, 1, 2],
+        target_names=["negative", "neutral", "positive"],
+        output_dict=True,
+        zero_division=0,
+    )
+    matrix = confusion_matrix(labels, preds, labels=[0, 1, 2])
+    matrix_df = pd.DataFrame(
+        matrix,
+        index=["true_negative", "true_neutral", "true_positive"],
+        columns=["pred_negative", "pred_neutral", "pred_positive"],
+    )
+
+    with (out / "test_metrics.json").open("w", encoding="utf-8") as f:
+        json.dump({k: float(v) for k, v in metrics.items()}, f, indent=2, sort_keys=True)
+    with (out / "classification_report.txt").open("w", encoding="utf-8") as f:
+        f.write(report_text)
+        f.write("\n")
+    with (out / "classification_report.json").open("w", encoding="utf-8") as f:
+        json.dump(report_json, f, indent=2, sort_keys=True)
+    matrix_df.to_csv(out / "confusion_matrix.csv")
 
 
 def main() -> None:
@@ -280,13 +321,14 @@ def main() -> None:
 
     trainer.train()
 
-    test_metrics = evaluate_generation(
+    test_metrics, gold, preds = evaluate_generation(
         model=model,
         tokenizer=tokenizer,
         df=test_df,
         max_eval_rows=args.eval_max_rows,
     )
     print("Test metrics:", test_metrics)
+    save_test_reports(args.output_dir, gold, preds, test_metrics)
 
     trainer.model.save_pretrained(args.output_dir)
     tokenizer.save_pretrained(args.output_dir)
