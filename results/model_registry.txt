@@ -1,0 +1,1 @@
+FinBERT model: anasamri12/finbert-malaysia-sentiment
