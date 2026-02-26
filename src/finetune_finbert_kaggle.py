@@ -9,7 +9,7 @@ import kagglehub
 import numpy as np
 import pandas as pd
 from datasets import Dataset
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
@@ -85,9 +85,26 @@ def split_df(df: pd.DataFrame, seed: int = 42) -> Splits:
 def compute_metrics(eval_pred: tuple[np.ndarray, np.ndarray]) -> dict[str, float]:
     logits, labels = eval_pred
     preds = np.argmax(logits, axis=-1)
+    p_macro, r_macro, f1_macro, _ = precision_recall_fscore_support(
+        labels, preds, average="macro", zero_division=0
+    )
+    p_cls, r_cls, f1_cls, _ = precision_recall_fscore_support(
+        labels, preds, labels=[0, 1, 2], average=None, zero_division=0
+    )
     return {
         "accuracy": accuracy_score(labels, preds),
-        "f1_macro": f1_score(labels, preds, average="macro"),
+        "f1_macro": f1_macro,
+        "precision_macro": p_macro,
+        "recall_macro": r_macro,
+        "precision_negative": p_cls[0],
+        "recall_negative": r_cls[0],
+        "f1_negative": f1_cls[0],
+        "precision_neutral": p_cls[1],
+        "recall_neutral": r_cls[1],
+        "f1_neutral": f1_cls[1],
+        "precision_positive": p_cls[2],
+        "recall_positive": r_cls[2],
+        "f1_positive": f1_cls[2],
     }
 
 

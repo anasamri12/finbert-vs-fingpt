@@ -11,7 +11,7 @@ import pandas as pd
 import torch
 from datasets import Dataset
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -146,9 +146,27 @@ def evaluate_generation(
         preds.append(pred)
         gold.append(int(row["labels"]))
 
+    p_macro, r_macro, f1_macro, _ = precision_recall_fscore_support(
+        gold, preds, average="macro", zero_division=0
+    )
+    p_cls, r_cls, f1_cls, _ = precision_recall_fscore_support(
+        gold, preds, labels=[0, 1, 2], average=None, zero_division=0
+    )
+
     return {
         "accuracy": accuracy_score(gold, preds),
-        "f1_macro": f1_score(gold, preds, average="macro"),
+        "f1_macro": f1_macro,
+        "precision_macro": p_macro,
+        "recall_macro": r_macro,
+        "precision_negative": p_cls[0],
+        "recall_negative": r_cls[0],
+        "f1_negative": f1_cls[0],
+        "precision_neutral": p_cls[1],
+        "recall_neutral": r_cls[1],
+        "f1_neutral": f1_cls[1],
+        "precision_positive": p_cls[2],
+        "recall_positive": r_cls[2],
+        "f1_positive": f1_cls[2],
     }
 
 
