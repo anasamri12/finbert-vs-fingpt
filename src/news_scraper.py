@@ -832,4 +832,6 @@ if __name__ == "__main__":
         start_date="2023-01-01",
         max_articles_per_site=None,
     )
-    save_articles_csv(rows, "malaysia_news_since_2023_fmt_bt.csv")
+    output_path = "results/data/malaysia_news_since_2023_fmt_bt.csv"
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    save_articles_csv(rows, output_path)
