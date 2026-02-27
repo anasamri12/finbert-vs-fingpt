@@ -763,7 +763,7 @@ def build_businesstoday_config() -> SiteConfig:
 
 def build_requested_malaysia_site_configs() -> list[SiteConfig]:
     return [
-        build_freemalaysiatoday_config(),
+        # build_freemalaysiatoday_config(),
         build_businesstoday_config(),
         # build_theedgemalaysia_config("politics"),
         # build_theedgemalaysia_config("economy"),
