@@ -15,6 +15,17 @@ from bs4 import BeautifulSoup
 
 
 ParserFunc = Callable[[BeautifulSoup], str]
+MOJIBAKE_REPLACEMENTS = {
+    "â€™": "'",
+    "â€˜": "'",
+    "â€œ": '"',
+    "â€\x9d": '"',
+    "â€“": "-",
+    "â€”": "-",
+    "â€¦": "...",
+    "Â ": " ",
+    "\xa0": " ",
+}
 
 
 @dataclass
@@ -114,6 +125,45 @@ def extract_text_default(soup: BeautifulSoup, selector: str) -> str:
     return "\n".join(line for line in blocks if line)
 
 
+def normalize_text(text: str) -> str:
+    fixed = text
+    for bad, good in MOJIBAKE_REPLACEMENTS.items():
+        fixed = fixed.replace(bad, good)
+    return re.sub(r"\s+", " ", fixed).strip()
+
+
+def clean_article_body(text: str) -> str:
+    if not text:
+        return ""
+    normalized = normalize_text(text)
+    line_seen: set[str] = set()
+    lines: list[str] = []
+    for raw_line in normalized.split("\n"):
+        line = normalize_text(raw_line)
+        if not line:
+            continue
+        low = line.lower()
+        if low == "related" or low.startswith("related "):
+            continue
+        if line in line_seen:
+            continue
+        line_seen.add(line)
+        lines.append(line)
+
+    sentence_seen: set[str] = set()
+    sentences: list[str] = []
+    for sentence in re.split(r"(?<=[.!?])\s+", " ".join(lines)):
+        part = normalize_text(sentence)
+        if not part:
+            continue
+        key = part.lower()
+        if key in sentence_seen:
+            continue
+        sentence_seen.add(key)
+        sentences.append(part)
+    return " ".join(sentences)
+
+
 def extract_published_date_from_soup(soup: BeautifulSoup) -> str:
     probes = [
         ('meta[property="article:published_time"]', "content"),
@@ -145,16 +195,32 @@ def resolve_cutoff_date(months_back: int, start_date: date | str | None = None) 
 
 
 def scrape_article(url: str, config: SiteConfig) -> dict[str, str] | None:
-    try:
-        response = requests.get(
-            url,
-            headers=config.request_headers,
-            timeout=config.timeout_seconds,
-            allow_redirects=True,
-        )
-        response.raise_for_status()
-    except requests.RequestException as exc:
-        print(f"[{config.name}] Skipping article {url}: {exc}")
+    response: requests.Response | None = None
+    for attempt in range(4):
+        try:
+            response = requests.get(
+                url,
+                headers=config.request_headers,
+                timeout=config.timeout_seconds,
+                allow_redirects=True,
+            )
+            if response.encoding is None or response.encoding.lower() in {"iso-8859-1", "latin-1"}:
+                if response.apparent_encoding:
+                    response.encoding = response.apparent_encoding
+            if response.status_code == 429:
+                wait_seconds = min(30.0, 2.5 * (attempt + 1))
+                print(f"[{config.name}] 429 on article {url}; retrying in {wait_seconds:.1f}s")
+                time.sleep(wait_seconds)
+                continue
+            response.raise_for_status()
+            break
+        except requests.RequestException as exc:
+            if attempt == 3:
+                print(f"[{config.name}] Skipping article {url}: {exc}")
+                response = None
+            else:
+                time.sleep(1.0 + attempt)
+    if response is None:
         return None
 
     final_url = response.url or url
@@ -174,11 +240,13 @@ def scrape_article(url: str, config: SiteConfig) -> dict[str, str] | None:
             title = str(og_title.get("content")).strip()
         elif soup.title:
             title = soup.title.get_text(" ", strip=True)
+    title = normalize_text(title)
 
     if config.body_parser is not None:
         body = config.body_parser(soup)
     else:
         body = extract_text_default(soup, config.article_body_selector)
+    body = clean_article_body(body)
 
     url_date = get_date_from_url(url, config.date_url_pattern())
     published_date = url_date.isoformat() if url_date else extract_published_date_from_soup(soup)
@@ -499,6 +567,8 @@ def collect_articles(
         if url_date and url_date < cutoff:
             continue
         article = scrape_article(url, config)
+        # Avoid hammering a single host with article requests.
+        time.sleep(0.25)
         if article is None:
             continue
         if not article["body"]:
@@ -693,7 +763,7 @@ def build_businesstoday_config() -> SiteConfig:
 
 def build_requested_malaysia_site_configs() -> list[SiteConfig]:
     return [
-        # build_freemalaysiatoday_config(),
+        build_freemalaysiatoday_config(),
         build_businesstoday_config(),
         # build_theedgemalaysia_config("politics"),
         # build_theedgemalaysia_config("economy"),
