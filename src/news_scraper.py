@@ -196,11 +196,24 @@ def get_links_from_list_pages(config: SiteConfig) -> set[str]:
     allowed = config.allowed_url_pattern()
     links: set[str] = set()
     for list_url in config.list_urls:
-        try:
-            response = requests.get(list_url, headers=config.request_headers, timeout=config.timeout_seconds)
-            response.raise_for_status()
-        except requests.RequestException as exc:
-            print(f"[{config.name}] List page failed {list_url}: {exc}")
+        response: requests.Response | None = None
+        for attempt in range(4):
+            try:
+                response = requests.get(list_url, headers=config.request_headers, timeout=config.timeout_seconds)
+                if response.status_code == 429:
+                    wait_seconds = min(20.0, 2.0 * (attempt + 1))
+                    print(f"[{config.name}] 429 on {list_url}; retrying in {wait_seconds:.1f}s")
+                    time.sleep(wait_seconds)
+                    continue
+                response.raise_for_status()
+                break
+            except requests.RequestException as exc:
+                if attempt == 3:
+                    print(f"[{config.name}] List page failed {list_url}: {exc}")
+                    response = None
+                else:
+                    time.sleep(1.0 + attempt)
+        if response is None:
             continue
 
         soup = BeautifulSoup(response.text, "html.parser")
@@ -215,6 +228,8 @@ def get_links_from_list_pages(config: SiteConfig) -> set[str]:
                 if is_blocked:
                     continue
                 links.add(full_url)
+        # Keep a modest pace to reduce rate limiting.
+        time.sleep(0.2)
 
     print(f"[{config.name}] HTML list pages yielded {len(links)} unique links")
     return links
@@ -657,7 +672,8 @@ def build_malaysiakini_config() -> SiteConfig:
 def build_businesstoday_config() -> SiteConfig:
     base = "https://www.businesstoday.com.my"
     marketing_pages = [f"{base}/category/marketing/"]
-    marketing_pages.extend(f"{base}/category/marketing/page/{idx}/" for idx in range(2, 527))
+    # Conservative default window to avoid 429 throttling; increase if needed.
+    marketing_pages.extend(f"{base}/category/marketing/page/{idx}/" for idx in range(2, 181))
     return SiteConfig(
         name="businesstoday_marketing",
         base_url=base,
