@@ -83,7 +83,7 @@ def predict_finbert(
 def predict_fingpt(
     texts: list[str],
     base_model_id: str,
-    adapter_id: str,
+    adapter_id: str | None,
     device: torch.device,
     max_length: int = 512,
     max_new_tokens: int = 4,
@@ -97,7 +97,7 @@ def predict_fingpt(
         torch_dtype=torch.float16 if device.type == "cuda" else torch.float32,
         device_map="auto" if device.type == "cuda" else None,
     )
-    model = PeftModel.from_pretrained(base_model, adapter_id)
+    model = base_model if adapter_id is None else PeftModel.from_pretrained(base_model, adapter_id)
     model.to(device)
     model.eval()
 
@@ -131,13 +131,21 @@ def main() -> None:
     parser.add_argument("--skip-finbert", action="store_true")
     parser.add_argument("--skip-fingpt", action="store_true")
     parser.add_argument("--finbert-model", default="anasamri12/finbert-malaysia-sentiment-run2")
+    parser.add_argument("--finbert-zeroshot-model", default="ProsusAI/finbert")
     parser.add_argument("--fingpt-base-model", default="TinyLlama/TinyLlama-1.1B-Chat-v1.0")
     parser.add_argument("--fingpt-adapter", default="anasamri12/fingpt-malaysia-lora-run2")
+    parser.add_argument("--fingpt-zeroshot-base-model", default="TinyLlama/TinyLlama-1.1B-Chat-v1.0")
+    parser.add_argument("--run-finbert-zeroshot", action="store_true")
+    parser.add_argument("--run-fingpt-zeroshot", action="store_true")
     parser.add_argument("--finbert-batch-size", type=int, default=32)
     args = parser.parse_args()
 
-    if args.skip_finbert and args.skip_fingpt:
-        raise ValueError("Both models are skipped. Remove at least one of --skip-finbert/--skip-fingpt.")
+    run_finetuned = not (args.skip_finbert and args.skip_fingpt)
+    run_any = run_finetuned or args.run_finbert_zeroshot or args.run_fingpt_zeroshot
+    if not run_any:
+        raise ValueError(
+            "No model run selected. Use fine-tuned defaults or set --run-finbert-zeroshot/--run-fingpt-zeroshot."
+        )
 
     df = pd.read_csv(args.input_csv)
     if args.max_rows is not None:
@@ -173,6 +181,19 @@ def main() -> None:
         result_df["finbert_prob_neutral"] = p_neu
         result_df["finbert_prob_positive"] = p_pos
 
+    if args.run_finbert_zeroshot:
+        print(f"Loading FinBERT zero-shot model: {args.finbert_zeroshot_model}")
+        z_label, z_p_neg, z_p_neu, z_p_pos = predict_finbert(
+            texts=texts,
+            model_id=args.finbert_zeroshot_model,
+            device=device,
+            batch_size=args.finbert_batch_size,
+        )
+        result_df["finbert_zeroshot_label"] = z_label
+        result_df["finbert_zeroshot_prob_negative"] = z_p_neg
+        result_df["finbert_zeroshot_prob_neutral"] = z_p_neu
+        result_df["finbert_zeroshot_prob_positive"] = z_p_pos
+
     if not args.skip_fingpt:
         print(f"Loading FinGPT base model: {args.fingpt_base_model}")
         print(f"Loading FinGPT adapter: {args.fingpt_adapter}")
@@ -184,6 +205,17 @@ def main() -> None:
         )
         result_df["fingpt_label"] = fg_label
         result_df["fingpt_raw_output"] = fg_raw
+
+    if args.run_fingpt_zeroshot:
+        print(f"Loading FinGPT zero-shot base model: {args.fingpt_zeroshot_base_model}")
+        zg_label, zg_raw = predict_fingpt(
+            texts=texts,
+            base_model_id=args.fingpt_zeroshot_base_model,
+            adapter_id=None,
+            device=device,
+        )
+        result_df["fingpt_zeroshot_label"] = zg_label
+        result_df["fingpt_zeroshot_raw_output"] = zg_raw
 
     output_path = Path(args.output_csv)
     output_path.parent.mkdir(parents=True, exist_ok=True)
