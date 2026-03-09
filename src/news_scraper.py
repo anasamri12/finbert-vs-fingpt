@@ -762,6 +762,23 @@ def build_businesstoday_config() -> SiteConfig:
     )
 
 
+def build_malaymail_config() -> SiteConfig:
+    base = "https://www.malaymail.com"
+    return SiteConfig(
+        name="malaymail_news",
+        base_url=base,
+        list_urls=[],
+        allowed_url_regex=r"https://www\.malaymail\.com/news/.+/\d{4}/\d{2}/\d{2}/[^?#]+/\d+/?$",
+        category_label="news",
+        article_title_selector="h1",
+        article_body_selector="article p, .article-body p, .article-content p, p",
+        date_from_url_regex=r"/(\d{4})/(\d{2})/(\d{2})/",
+        sitemap_urls=[
+            "https://www.malaymail.com/sitemap.xml",
+        ],
+    )
+
+
 def build_requested_malaysia_site_configs() -> list[SiteConfig]:
     return [
         # build_freemalaysiatoday_config(),
@@ -769,7 +786,8 @@ def build_requested_malaysia_site_configs() -> list[SiteConfig]:
         # build_theedgemalaysia_config("politics"),
         # build_theedgemalaysia_config("economy"),
         # build_theedgemalaysia_config("corporate"),
-        build_malaysiakini_config(),
+        # build_malaysiakini_config(),
+        build_malaymail_config(),
     ]
 
 
@@ -833,6 +851,6 @@ if __name__ == "__main__":
         start_date="2023-01-01",
         max_articles_per_site=None,
     )
-    output_path = "results/data/malaysia_news_since_2023_mk.csv"
+    output_path = "results/data/malaysia_news_since_2023_malaymail.csv"
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     save_articles_csv(rows, output_path)
