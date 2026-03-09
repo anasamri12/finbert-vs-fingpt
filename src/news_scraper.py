@@ -765,11 +765,11 @@ def build_businesstoday_config() -> SiteConfig:
 def build_requested_malaysia_site_configs() -> list[SiteConfig]:
     return [
         # build_freemalaysiatoday_config(),
-        build_businesstoday_config(),
+        # build_businesstoday_config(),
         # build_theedgemalaysia_config("politics"),
         # build_theedgemalaysia_config("economy"),
         # build_theedgemalaysia_config("corporate"),
-        # build_malaysiakini_config(),
+        build_malaysiakini_config(),
     ]
 
 
@@ -833,6 +833,6 @@ if __name__ == "__main__":
         start_date="2023-01-01",
         max_articles_per_site=None,
     )
-    output_path = "results/data/malaysia_news_since_2023_fmt_bt.csv"
+    output_path = "results/data/malaysia_news_since_2023_mk.csv"
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     save_articles_csv(rows, output_path)
