@@ -1,3 +1,0 @@
-FinBERT model: anasamri12/finbert-malaysia-sentiment
-2026-02-26 finbert_run2: https://huggingface.co/anasamri12/finbert-malaysia-sentiment-run2
-2026-02-26 fingpt_run2: https://huggingface.co/anasamri12/fingpt-malaysia-lora-run2

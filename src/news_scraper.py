@@ -4,11 +4,12 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from typing import Any, Callable
 import csv
+import json
 import os
 import re
 import time
 from time import perf_counter
-from urllib.parse import urljoin
+from urllib.parse import quote, urljoin
 import xml.etree.ElementTree as ET
 
 import requests
@@ -213,6 +214,10 @@ def scrape_article(url: str, config: SiteConfig) -> dict[str, str] | None:
                 print(f"[{config.name}] 429 on article {url}; retrying in {wait_seconds:.1f}s")
                 time.sleep(wait_seconds)
                 continue
+            if response.status_code in {403, 404}:
+                print(f"[{config.name}] Skipping article {url}: HTTP {response.status_code}")
+                response = None
+                break
             response.raise_for_status()
             break
         except requests.RequestException as exc:
@@ -261,10 +266,17 @@ def scrape_article(url: str, config: SiteConfig) -> dict[str, str] | None:
     }
 
 
-def get_links_from_list_pages(config: SiteConfig) -> set[str]:
+def get_links_from_list_pages(config: SiteConfig, cutoff_date: date | None = None) -> set[str]:
     allowed = config.allowed_url_pattern()
+    date_pattern = config.date_url_pattern()
     links: set[str] = set()
-    for list_url in config.list_urls:
+    total_pages = len(config.list_urls)
+    stagnant_pages = 0
+    stagnant_limit = 30
+    old_pages = 0
+    old_pages_limit = 5
+    for idx, list_url in enumerate(config.list_urls, start=1):
+        before_count = len(links)
         response: requests.Response | None = None
         for attempt in range(4):
             try:
@@ -274,6 +286,10 @@ def get_links_from_list_pages(config: SiteConfig) -> set[str]:
                     print(f"[{config.name}] 429 on {list_url}; retrying in {wait_seconds:.1f}s")
                     time.sleep(wait_seconds)
                     continue
+                if response.status_code in {403, 404}:
+                    print(f"[{config.name}] Skipping list page {list_url}: HTTP {response.status_code}")
+                    response = None
+                    break
                 response.raise_for_status()
                 break
             except requests.RequestException as exc:
@@ -286,6 +302,7 @@ def get_links_from_list_pages(config: SiteConfig) -> set[str]:
             continue
 
         soup = BeautifulSoup(response.text, "html.parser")
+        page_dates: list[date] = []
         for anchor in soup.find_all("a"):
             href = anchor.get("href") or ""
             if not href:
@@ -297,8 +314,40 @@ def get_links_from_list_pages(config: SiteConfig) -> set[str]:
                 if is_blocked:
                     continue
                 links.add(full_url)
+                url_date = get_date_from_url(full_url, date_pattern)
+                if url_date is not None:
+                    page_dates.append(url_date)
+
+        if len(links) == before_count:
+            stagnant_pages += 1
+        else:
+            stagnant_pages = 0
+        if cutoff_date is not None and page_dates:
+            newest_on_page = max(page_dates)
+            if newest_on_page < cutoff_date:
+                old_pages += 1
+            else:
+                old_pages = 0
+
         # Keep a modest pace to reduce rate limiting.
         time.sleep(0.2)
+        if idx == 1 or idx % 25 == 0 or idx == total_pages:
+            print(
+                f"[{config.name}] List page progress: {idx}/{total_pages} "
+                f"(unique candidate links: {len(links)})"
+            )
+        if stagnant_pages >= stagnant_limit:
+            print(
+                f"[{config.name}] No new links for {stagnant_limit} consecutive pages; "
+                "stopping list-page scan early"
+            )
+            break
+        if old_pages >= old_pages_limit:
+            print(
+                f"[{config.name}] Newest URL date is older than cutoff for {old_pages_limit} "
+                "consecutive pages; stopping list-page scan early"
+            )
+            break
 
     print(f"[{config.name}] HTML list pages yielded {len(links)} unique links")
     return links
@@ -438,6 +487,20 @@ def extract_malaysiakini_stories(data: dict[str, Any]) -> list[dict[str, Any]]:
     return normalized
 
 
+def extract_next_data_json(html_text: str) -> dict[str, Any] | None:
+    match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', html_text, re.S)
+    if not match:
+        return None
+    payload = match.group(1).strip()
+    if not payload:
+        return None
+    try:
+        data = json.loads(payload)
+    except json.JSONDecodeError:
+        return None
+    return data if isinstance(data, dict) else None
+
+
 def fetch_links_from_api(
     config: SiteConfig,
     cutoff_date: date | None = None,
@@ -471,7 +534,13 @@ def fetch_links_from_api(
                     timeout=config.timeout_seconds,
                 )
             response.raise_for_status()
-            data = response.json()
+            try:
+                data = response.json()
+            except ValueError:
+                next_data = extract_next_data_json(response.text)
+                if next_data is None:
+                    raise
+                data = next_data
             if (
                 api.method.upper() == "GET"
                 and isinstance(data, dict)
@@ -488,12 +557,18 @@ def fetch_links_from_api(
                     timeout=config.timeout_seconds,
                 )
                 response.raise_for_status()
-                data = response.json()
+                try:
+                    data = response.json()
+                except ValueError:
+                    next_data = extract_next_data_json(response.text)
+                    if next_data is None:
+                        raise
+                    data = next_data
         except requests.RequestException as exc:
             print(f"[{config.name}] API request failed at offset {offset}: {exc}")
             break
         except ValueError as exc:
-            print(f"[{config.name}] API returned non-JSON at offset {offset}: {exc}")
+            print(f"[{config.name}] API returned unsupported payload at offset {offset}: {exc}")
             break
 
         edges = api.extract_edges(data)
@@ -508,6 +583,8 @@ def fetch_links_from_api(
             dt = parse_api_datetime(node.get(api.edge_date_key))
             if dt and (oldest is None or dt < oldest):
                 oldest = dt
+            if cutoff_date is not None and dt is not None and dt.date() < cutoff_date:
+                continue
 
             edge_url = _extract_edge_url(edge, api.edge_url_keys)
             if not edge_url:
@@ -549,7 +626,7 @@ def collect_articles(
     cutoff = resolve_cutoff_date(months_back=months_back, start_date=start_date)
     print(f"[{config.name}] Cutoff date: {cutoff}")
 
-    candidate_urls = get_links_from_list_pages(config)
+    candidate_urls = get_links_from_list_pages(config, cutoff_date=cutoff)
     target_candidates = None
     if max_articles is not None:
         # Keep a buffer above max_articles because some URLs will fail or have empty body.
@@ -710,6 +787,91 @@ def build_theedgemalaysia_config(category_slug: str) -> SiteConfig:
     )
 
 
+def extract_theedge_search_results(data: dict[str, Any]) -> list[dict[str, Any]]:
+    if not isinstance(data, dict):
+        return []
+    page_props = data.get("props", {}).get("pageProps", {})
+    if not isinstance(page_props, dict):
+        return []
+    items = page_props.get("newsArticleData", [])
+    if not isinstance(items, list):
+        return []
+    return [row for row in items if isinstance(row, dict)]
+
+
+def build_theedgemalaysia_search_config(
+    keywords: str,
+    label: str,
+    *,
+    from_date: str = "2023-01-01",
+    to_date: str = "2025-09-30",
+    max_pages: int = 5000,
+) -> SiteConfig:
+    base = "https://theedgemalaysia.com"
+    encoded_keywords = quote(keywords)
+    return SiteConfig(
+        name=f"theedgemalaysia_search_{label}",
+        base_url=base,
+        list_urls=[],
+        allowed_url_regex=r"https://theedgemalaysia\.com/node/\d+",
+        category_label=label,
+        article_title_selector="h1",
+        article_body_selector="article p, .field--name-body p, .node__content p, p",
+        date_from_url_regex=None,
+        api_pagination=ApiPaginationConfig(
+            url=(
+                f"{base}/news-search-results?keywords={encoded_keywords}"
+                f"&from={from_date}&to={to_date}&language=english&offset={{offset}}"
+            ),
+            method="GET",
+            start_offset=0,
+            step=10,
+            build_payload=lambda offset: {},
+            extract_edges=extract_theedge_search_results,
+            edge_url_keys=("alias",),
+            edge_date_key="created",
+            max_pages=max_pages,
+            sleep_seconds=0.15,
+        ),
+    )
+
+
+def build_theedge_search_windowed_configs(
+    *,
+    keywords: str,
+    base_label: str,
+    from_date: str,
+    to_date: str,
+    window_days: int = 90,
+    max_pages_per_window: int = 1200,
+) -> list[SiteConfig]:
+    start = date.fromisoformat(from_date)
+    end = date.fromisoformat(to_date)
+    if start > end:
+        raise ValueError(f"from_date ({from_date}) must be <= to_date ({to_date})")
+
+    configs: list[SiteConfig] = []
+    cursor = start
+    idx = 1
+    while cursor <= end:
+        window_end = min(cursor + timedelta(days=window_days - 1), end)
+        window_from = cursor.isoformat()
+        window_to = window_end.isoformat()
+        label = f"{base_label}_w{idx:02d}_{window_from}_to_{window_to}"
+        configs.append(
+            build_theedgemalaysia_search_config(
+                keywords,
+                label,
+                from_date=window_from,
+                to_date=window_to,
+                max_pages=max_pages_per_window,
+            )
+        )
+        cursor = window_end + timedelta(days=1)
+        idx += 1
+    return configs
+
+
 def build_malaysiakini_config() -> SiteConfig:
     base = "https://www.malaysiakini.com"
     category = "news"
@@ -764,15 +926,26 @@ def build_businesstoday_config() -> SiteConfig:
 
 def build_malaymail_config() -> SiteConfig:
     base = "https://www.malaymail.com"
+    money_pages = [f"{base}/morearticles/money"]
+    money_pages.extend(f"{base}/morearticles/money?pgno={idx}" for idx in range(2, 5001))
     return SiteConfig(
-        name="malaymail_news",
+        name="malaymail_money",
         base_url=base,
-        list_urls=[],
-        allowed_url_regex=r"https://www\.malaymail\.com/news/.+/\d{4}/\d{2}/\d{2}/[^?#]+/\d+/?$",
-        category_label="news",
+        list_urls=money_pages,
+        allowed_url_regex=r"https://www\.malaymail\.com/news/money/\d{4}/\d{2}/\d{2}/[^?#/]+/\d+/?$",
+        category_label="money",
         article_title_selector="h1",
         article_body_selector="article p, .article-body p, .article-content p, p",
         date_from_url_regex=r"/(\d{4})/(\d{2})/(\d{2})/",
+        request_headers={
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/124.0.0.0 Safari/537.36"
+            ),
+            "Accept-Language": "en-US,en;q=0.9",
+            "Referer": f"{base}/news/money",
+        },
         sitemap_urls=[
             "https://www.malaymail.com/sitemap.xml",
         ],
@@ -780,15 +953,38 @@ def build_malaymail_config() -> SiteConfig:
 
 
 def build_requested_malaysia_site_configs() -> list[SiteConfig]:
-    return [
+    configs: list[SiteConfig] = [
         # build_freemalaysiatoday_config(),
         # build_businesstoday_config(),
         # build_theedgemalaysia_config("politics"),
         # build_theedgemalaysia_config("economy"),
         # build_theedgemalaysia_config("corporate"),
+        # build_theedgemalaysia_search_config(
+        #     "corporate",
+        #     "corporate",
+        #     from_date="2023-01-01",
+        #     to_date="2025-09-30",
+        # ),
+        # build_theedgemalaysia_search_config(
+        #     "economy malaysia",
+        #     "economy_malaysia",
+        #     from_date="2023-01-01",
+        #     to_date="2025-09-30",
+        # ),
         # build_malaysiakini_config(),
-        build_malaymail_config(),
+        # build_malaymail_config(),
     ]
+    configs.extend(
+        build_theedge_search_windowed_configs(
+            keywords="corporate",
+            base_label="corporate",
+            from_date="2023-01-01",
+            to_date="2025-09-30",
+            window_days=90,
+            max_pages_per_window=1200,
+        )
+    )
+    return configs
 
 
 def validate_site_config(
@@ -799,7 +995,7 @@ def validate_site_config(
 ) -> list[dict[str, str]]:
     cutoff = resolve_cutoff_date(months_back=months_back, start_date=start_date)
     candidate_set = (
-        get_links_from_list_pages(config)
+        get_links_from_list_pages(config, cutoff_date=cutoff)
         .union(fetch_links_from_sitemaps(config, cutoff_date=cutoff))
         .union(fetch_links_from_api(config, cutoff_date=cutoff))
     )
@@ -851,6 +1047,6 @@ if __name__ == "__main__":
         start_date="2023-01-01",
         max_articles_per_site=None,
     )
-    output_path = "results/data/malaysia_news_since_2023_malaymail.csv"
+    output_path = "results/data/theedgemalaysia_corporate_2023-01-01_to_2025-09-30.csv"
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     save_articles_csv(rows, output_path)
