@@ -64,6 +64,16 @@ DATELINE_PREFIX_PATTERNS = (
         r"(?:,\s*[A-Za-z]{3,12}\s+\d{1,2})?\s*\(Reuters\)\s*[-:]\s+",
         re.I,
     ),
+    # Example: ALOR SETAR, Jan 1 — / KUALA LUMPUR, March 31, 2026 -
+    re.compile(
+        r"^\s*[A-Z][A-Z .,&'/-]{2,}(?:\s+[A-Z][A-Z .,&'/-]{2,}){0,5}\s*,\s*"
+        r"[A-Za-z]{3,12}\s+\d{1,2}(?:,\s*\d{4})?\s*[—-]\s+"
+    ),
+)
+
+LEADING_NAV_NOISE_PATTERN = re.compile(
+    r"^\s*(?:about us|advertise|contact us|sign up|log in|home)(?:\s*[|:/-]\s*|\s+){1,8}",
+    re.I,
 )
 
 COLUMN_CANDIDATES = {
@@ -254,6 +264,10 @@ def strip_leading_dateline(text: str) -> str:
     for _ in range(3):
         prefix = cleaned[:180]
         previous = cleaned
+        nav_match = LEADING_NAV_NOISE_PATTERN.match(prefix)
+        if nav_match:
+            cleaned = cleaned[nav_match.end() :].lstrip()
+            prefix = cleaned[:180]
         for pattern in DATELINE_PREFIX_PATTERNS:
             match = pattern.match(prefix)
             if match:
