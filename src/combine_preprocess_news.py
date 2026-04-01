@@ -23,6 +23,48 @@ TRACKING_QUERY_KEYS = {
 }
 
 MOJIBAKE_REPLACEMENTS = {
+    "Â": "",
+    "Â": "",
+    "â€•": "-",
+    "â€‹": "",
+    "â€Œ": "",
+    "â€": "",
+    "\u200b": "",
+    "\u200c": "",
+    "\u200d": "",
+    "\ufeff": "",
+    "’": "'",
+    "‘": "'",
+    "“": '"',
+    "”": '"',
+    "–": "-",
+    "—": "-",
+    "…": "...",
+    "Ã¢Â€Â™": "'",
+    "Ã¢Â€Â˜": "'",
+    "Ã¢Â€Âœ": '"',
+    "Ã¢Â€Â": '"',
+    "Ã¢Â€Â": "-",
+    "Ã¢Â€Â”": "-",
+    "Ã¢Â€Â¦": "...",
+    "â\x80\x98": "'",
+    "â\x80\x99": "'",
+    "â\x80\x9c": '"',
+    "â\x80\x9d": '"',
+    "â\x80\x93": "-",
+    "â\x80\x94": "-",
+    "â\x80\xa6": "...",
+    "â€™": "'",
+    "â€˜": "'",
+    "â€œ": '"',
+    "â€\x9d": '"',
+    "â€\x98": "'",
+    "â€\x99": "'",
+    "â€\x9c": '"',
+    "â€\x9d": '"',
+    "â€“": "-",
+    "â€”": "-",
+    "â€¦": "...",
     "Ã¢â‚¬â„¢": "'",
     "Ã¢â‚¬Ëœ": "'",
     "Ã¢â‚¬Å“": '"',
@@ -247,11 +289,37 @@ def pick_column(df: pd.DataFrame, candidates: tuple[str, ...]) -> str | None:
     return None
 
 
+def _mojibake_score(text: str) -> int:
+    markers = ("Ã", "Â", "â‚¬", "â€œ", "â€", "â€™", "â€¦")
+    return sum(text.count(marker) for marker in markers)
+
+
+def repair_mojibake(text: str) -> str:
+    repaired = text
+    for _ in range(2):
+        best = repaired
+        best_score = _mojibake_score(repaired)
+        for encoding in ("cp1252", "latin-1"):
+            try:
+                candidate = repaired.encode(encoding, errors="strict").decode("utf-8", errors="strict")
+            except UnicodeError:
+                continue
+            candidate_score = _mojibake_score(candidate)
+            if candidate_score < best_score:
+                best = candidate
+                best_score = candidate_score
+        if best == repaired:
+            break
+        repaired = best
+    return repaired
+
+
 def clean_text(value: object) -> str:
     if value is None:
         return ""
     text = str(value)
     text = html.unescape(text)
+    text = repair_mojibake(text)
     for bad, good in MOJIBAKE_REPLACEMENTS.items():
         text = text.replace(bad, good)
     text = re.sub(r"<[^>]+>", " ", text)
@@ -681,7 +749,7 @@ def main() -> None:
     output_csv = Path(args.output_csv)
     output_csv.parent.mkdir(parents=True, exist_ok=True)
     cleaned_export = to_date_text_only(cleaned)
-    cleaned_export.to_csv(output_csv, index=False, encoding="utf-8")
+    cleaned_export.to_csv(output_csv, index=False, encoding="utf-8-sig")
 
     clean_dates = pd.to_datetime(cleaned["date"], errors="coerce")
     clean_year = clean_dates.dt.year
@@ -691,12 +759,12 @@ def main() -> None:
     output_csv_2023_2025 = Path(args.output_csv_2023_2025)
     output_csv_2023_2025.parent.mkdir(parents=True, exist_ok=True)
     cleaned_2023_2025_export = to_date_text_only(cleaned_2023_2025)
-    cleaned_2023_2025_export.to_csv(output_csv_2023_2025, index=False, encoding="utf-8")
+    cleaned_2023_2025_export.to_csv(output_csv_2023_2025, index=False, encoding="utf-8-sig")
 
     output_csv_2026 = Path(args.output_csv_2026)
     output_csv_2026.parent.mkdir(parents=True, exist_ok=True)
     cleaned_2026_export = to_date_text_only(cleaned_2026)
-    cleaned_2026_export.to_csv(output_csv_2026, index=False, encoding="utf-8")
+    cleaned_2026_export.to_csv(output_csv_2026, index=False, encoding="utf-8-sig")
 
     sample_df, sample_report = build_human_label_sample(
         cleaned_df=cleaned,
@@ -708,7 +776,7 @@ def main() -> None:
     sample_output_csv = Path(args.sample_output_csv)
     sample_output_csv.parent.mkdir(parents=True, exist_ok=True)
     sample_export = to_date_text_only(sample_df)
-    sample_export.to_csv(sample_output_csv, index=False, encoding="utf-8")
+    sample_export.to_csv(sample_output_csv, index=False, encoding="utf-8-sig")
 
     sample_years = (
         pd.to_datetime(sample_export["date"], errors="coerce").dt.year
@@ -720,11 +788,11 @@ def main() -> None:
 
     sample_output_csv_2025 = Path(args.sample_output_csv_2025)
     sample_output_csv_2025.parent.mkdir(parents=True, exist_ok=True)
-    sample_df_2025.to_csv(sample_output_csv_2025, index=False, encoding="utf-8")
+    sample_df_2025.to_csv(sample_output_csv_2025, index=False, encoding="utf-8-sig")
 
     sample_output_csv_2026 = Path(args.sample_output_csv_2026)
     sample_output_csv_2026.parent.mkdir(parents=True, exist_ok=True)
-    sample_df_2026.to_csv(sample_output_csv_2026, index=False, encoding="utf-8")
+    sample_df_2026.to_csv(sample_output_csv_2026, index=False, encoding="utf-8-sig")
 
     report_json = Path(args.report_json)
     report_json.parent.mkdir(parents=True, exist_ok=True)
