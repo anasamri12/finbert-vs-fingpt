@@ -18,9 +18,9 @@ from transformers import (
     AutoTokenizer,
     BitsAndBytesConfig,
     DataCollatorForLanguageModeling,
+    Trainer,
     TrainingArguments,
 )
-from trl import SFTTrainer
 
 
 TEXT_CANDIDATES = ("headline", "title", "text", "news", "sentence")
@@ -122,6 +122,17 @@ def normalize_label_text(generated: str) -> int:
         return 1
     # fallback: conservative to neutral if model output is noisy
     return 1
+
+
+def tokenize_for_causal_lm(dataset: Dataset, tokenizer: AutoTokenizer, max_length: int) -> Dataset:
+    def _tokenize(batch: dict[str, list[str]]) -> dict[str, list[list[int]]]:
+        return tokenizer(
+            batch["train_text"],
+            truncation=True,
+            max_length=max_length,
+        )
+
+    return dataset.map(_tokenize, batched=True, remove_columns=dataset.column_names)
 
 
 def evaluate_generation(
@@ -322,10 +333,13 @@ def main() -> None:
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
     )
     model = get_peft_model(model, lora_config)
+    model.config.use_cache = False
     model.print_trainable_parameters()
 
     train_ds = Dataset.from_pandas(train_df[["train_text"]], preserve_index=False)
     val_ds = Dataset.from_pandas(val_df[["train_text"]], preserve_index=False)
+    train_ds = tokenize_for_causal_lm(train_ds, tokenizer, args.max_length)
+    val_ds = tokenize_for_causal_lm(val_ds, tokenizer, args.max_length)
 
     training_args = TrainingArguments(
         output_dir=args.output_dir,
@@ -343,13 +357,11 @@ def main() -> None:
         report_to="none",
     )
 
-    trainer = SFTTrainer(
+    trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=train_ds,
         eval_dataset=val_ds,
-        dataset_text_field="train_text",
-        max_seq_length=args.max_length,
         tokenizer=tokenizer,
         data_collator=DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False),
     )
