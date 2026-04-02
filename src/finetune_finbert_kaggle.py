@@ -7,7 +7,6 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-import kagglehub
 import numpy as np
 import pandas as pd
 from datasets import Dataset
@@ -56,6 +55,10 @@ def load_kaggle_table(csv_path: str) -> pd.DataFrame:
         raw.columns = ["text", "label"]
         return raw
     return df
+
+
+def load_table(csv_path: str) -> pd.DataFrame:
+    return load_kaggle_table(csv_path)
 
 
 def map_labels(series: pd.Series) -> pd.Series:
@@ -154,8 +157,27 @@ def to_hf_dataset(df: pd.DataFrame, tokenizer: AutoTokenizer, max_length: int) -
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Fine-tune FinBERT on Kaggle labeled news dataset.")
-    parser.add_argument("--dataset", default="haojie98/news-headline")
+    parser = argparse.ArgumentParser(description="Fine-tune FinBERT on a labeled news dataset.")
+    parser.add_argument(
+        "--dataset",
+        default="",
+        help="Optional Kaggle dataset slug. Ignored when --input-csv is provided.",
+    )
+    parser.add_argument(
+        "--input-csv",
+        default="",
+        help="Optional local labeled CSV path. Use this for pseudo-labeled adaptation datasets.",
+    )
+    parser.add_argument(
+        "--text-column",
+        default="",
+        help="Optional explicit text column when using --input-csv.",
+    )
+    parser.add_argument(
+        "--label-column",
+        default="",
+        help="Optional explicit label column when using --input-csv.",
+    )
     parser.add_argument("--model", default="ProsusAI/finbert")
     parser.add_argument("--output-dir", default="models/finbert_kaggle")
     parser.add_argument("--epochs", type=int, default=3)
@@ -165,19 +187,32 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
-    path = kagglehub.dataset_download(args.dataset)
-    csv_files = glob.glob(os.path.join(path, "*.csv"))
-    if not csv_files:
-        raise FileNotFoundError(f"No CSV files found in downloaded dataset folder: {path}")
+    if args.input_csv:
+        csv_path = args.input_csv
+        if not Path(csv_path).exists():
+            raise FileNotFoundError(f"--input-csv not found: {csv_path}")
+        print(f"Using local dataset file: {csv_path}")
+    else:
+        if not args.dataset:
+            raise ValueError("Provide either --input-csv or --dataset.")
+        try:
+            import kagglehub
+        except ImportError as exc:
+            raise ImportError("kagglehub is required for --dataset. Install with: pip install kagglehub") from exc
 
-    # Pick the largest CSV by size as default training table.
-    csv_files = sorted(csv_files, key=lambda p: os.path.getsize(p), reverse=True)
-    csv_path = csv_files[0]
-    print(f"Using dataset file: {csv_path}")
+        path = kagglehub.dataset_download(args.dataset)
+        csv_files = glob.glob(os.path.join(path, "*.csv"))
+        if not csv_files:
+            raise FileNotFoundError(f"No CSV files found in downloaded dataset folder: {path}")
 
-    df = load_kaggle_table(csv_path)
-    text_col = infer_column(df, TEXT_CANDIDATES + ("text",), "text")
-    label_col = infer_column(df, LABEL_CANDIDATES + ("label",), "label")
+        # Pick the largest CSV by size as default training table.
+        csv_files = sorted(csv_files, key=lambda p: os.path.getsize(p), reverse=True)
+        csv_path = csv_files[0]
+        print(f"Using Kaggle dataset file: {csv_path}")
+
+    df = load_table(csv_path)
+    text_col = args.text_column or infer_column(df, TEXT_CANDIDATES + ("text",), "text")
+    label_col = args.label_column or infer_column(df, LABEL_CANDIDATES + ("label",), "label")
     print(f"Inferred columns -> text: {text_col}, label: {label_col}")
 
     clean = df[[text_col, label_col]].copy()
