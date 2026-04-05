@@ -1,0 +1,2 @@
+model_family,model_source,adapter_source,input_csv,text_column,label_column,rows_scored,accuracy,precision_macro,recall_macro,f1_macro,precision_weighted,recall_weighted,f1_weighted
+fingpt,TinyLlama/TinyLlama-1.1B-Chat-v1.0,anasamri12/fingpt-malaysia-lora-run2,data/human_labelled/news_human_label_sample_2025_100_cleaned.csv,text,sentiment,100,0.35,0.5331061343719572,0.39645511720983423,0.3282051282051282,0.6217526777020448,0.35,0.33148717948717943

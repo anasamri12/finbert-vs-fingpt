@@ -1,0 +1,2 @@
+model_family,model_source,input_csv,text_column,label_column,rows_scored,accuracy,precision_macro,recall_macro,f1_macro,precision_weighted,recall_weighted,f1_weighted
+finbert,ProsusAI/finbert,data/human_labelled/news_human_label_sample_2025_100_cleaned.csv,text,sentiment,100,0.25,0.2957393483709273,0.2683476272155518,0.24955832789736898,0.35966165413533835,0.25,0.26106857469015005

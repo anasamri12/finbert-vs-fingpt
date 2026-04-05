@@ -1,0 +1,17 @@
+[
+  {
+    "model_family": "finbert",
+    "model_source": "ProsusAI/finbert",
+    "input_csv": "data/human_labelled/news_human_label_sample_2025_100_cleaned.csv",
+    "text_column": "text",
+    "label_column": "sentiment",
+    "rows_scored": 100,
+    "accuracy": 0.25,
+    "precision_macro": 0.2957393483709273,
+    "recall_macro": 0.2683476272155518,
+    "f1_macro": 0.24955832789736898,
+    "precision_weighted": 0.35966165413533835,
+    "recall_weighted": 0.25,
+    "f1_weighted": 0.26106857469015005
+  }
+]

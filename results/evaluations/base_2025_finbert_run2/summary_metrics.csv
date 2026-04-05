@@ -1,0 +1,2 @@
+model_family,model_source,input_csv,text_column,label_column,rows_scored,accuracy,precision_macro,recall_macro,f1_macro,precision_weighted,recall_weighted,f1_weighted
+finbert,anasamri12/finbert-malaysia-sentiment-run2,data/human_labelled/news_human_label_sample_2025_100_cleaned.csv,text,sentiment,100,0.69,0.6585431624363771,0.6427901658090337,0.6203089882335165,0.6889018100920213,0.69,0.6668363646665534
