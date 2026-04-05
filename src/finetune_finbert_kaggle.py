@@ -61,6 +61,20 @@ def load_table(csv_path: str) -> pd.DataFrame:
     return load_kaggle_table(csv_path)
 
 
+def prepare_labeled_df(df: pd.DataFrame, text_column: str = "", label_column: str = "") -> tuple[pd.DataFrame, str, str]:
+    text_col = text_column or infer_column(df, TEXT_CANDIDATES + ("text",), "text")
+    label_col = label_column or infer_column(df, LABEL_CANDIDATES + ("label",), "label")
+
+    clean = df[[text_col, label_col]].copy()
+    clean = clean.rename(columns={text_col: "text", label_col: "label"})
+    clean = clean.dropna(subset=["text", "label"])
+    clean["text"] = clean["text"].astype(str).str.strip()
+    clean = clean[clean["text"].ne("")]
+    clean["labels"] = map_labels(clean["label"])
+    clean = clean[["text", "labels"]].drop_duplicates(subset=["text"]).reset_index(drop=True)
+    return clean, text_col, label_col
+
+
 def map_labels(series: pd.Series) -> pd.Series:
     raw = series.astype(str).str.strip().str.lower()
     mapping = {
@@ -147,6 +161,13 @@ def save_test_reports(output_dir: str, labels: np.ndarray, preds: np.ndarray, me
     matrix_df.to_csv(out / "confusion_matrix.csv")
 
 
+def save_metrics_json(output_dir: str, filename: str, metrics: dict[str, float]) -> None:
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    with (out / filename).open("w", encoding="utf-8") as f:
+        json.dump({k: float(v) for k, v in metrics.items()}, f, indent=2, sort_keys=True)
+
+
 def to_hf_dataset(df: pd.DataFrame, tokenizer: AutoTokenizer, max_length: int) -> Dataset:
     ds = Dataset.from_pandas(df[["text", "labels"]], preserve_index=False)
 
@@ -168,6 +189,9 @@ def main() -> None:
         default="",
         help="Optional local labeled CSV path. Use this for pseudo-labeled adaptation datasets.",
     )
+    parser.add_argument("--train-csv", default="", help="Optional explicit training CSV for fixed-split runs.")
+    parser.add_argument("--val-csv", default="", help="Optional explicit validation CSV for fixed-split runs.")
+    parser.add_argument("--test-csv", default="", help="Optional explicit test CSV for fixed-split runs.")
     parser.add_argument(
         "--text-column",
         default="",
@@ -187,7 +211,21 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
-    if args.input_csv:
+    using_explicit_splits = any([args.train_csv, args.val_csv, args.test_csv])
+    if using_explicit_splits and not all([args.train_csv, args.val_csv, args.test_csv]):
+        raise ValueError("When using explicit split files, provide --train-csv, --val-csv, and --test-csv together.")
+    if using_explicit_splits and (args.input_csv or args.dataset):
+        raise ValueError("Use either explicit split files or --input-csv/--dataset, not both.")
+
+    if using_explicit_splits:
+        train_path = Path(args.train_csv)
+        val_path = Path(args.val_csv)
+        test_path = Path(args.test_csv)
+        for path in (train_path, val_path, test_path):
+            if not path.exists():
+                raise FileNotFoundError(f"Split CSV not found: {path}")
+        print(f"Using explicit split files: train={train_path}, val={val_path}, test={test_path}")
+    elif args.input_csv:
         csv_path = args.input_csv
         if not Path(csv_path).exists():
             raise FileNotFoundError(f"--input-csv not found: {csv_path}")
@@ -210,21 +248,23 @@ def main() -> None:
         csv_path = csv_files[0]
         print(f"Using Kaggle dataset file: {csv_path}")
 
-    df = load_table(csv_path)
-    text_col = args.text_column or infer_column(df, TEXT_CANDIDATES + ("text",), "text")
-    label_col = args.label_column or infer_column(df, LABEL_CANDIDATES + ("label",), "label")
-    print(f"Inferred columns -> text: {text_col}, label: {label_col}")
+    if using_explicit_splits:
+        train_clean, text_col, label_col = prepare_labeled_df(load_table(args.train_csv), args.text_column, args.label_column)
+        val_clean, _, _ = prepare_labeled_df(load_table(args.val_csv), args.text_column, args.label_column)
+        test_clean, _, _ = prepare_labeled_df(load_table(args.test_csv), args.text_column, args.label_column)
+        print(f"Inferred columns -> text: {text_col}, label: {label_col}")
+        print(
+            "Rows after cleaning:"
+            f" train={len(train_clean)}, val={len(val_clean)}, test={len(test_clean)}"
+        )
+        splits = Splits(train=train_clean, val=val_clean, test=test_clean)
+    else:
+        df = load_table(csv_path)
+        clean, text_col, label_col = prepare_labeled_df(df, args.text_column, args.label_column)
+        print(f"Inferred columns -> text: {text_col}, label: {label_col}")
+        print(f"Training rows after cleaning: {len(clean)}")
+        splits = split_df(clean, seed=args.seed)
 
-    clean = df[[text_col, label_col]].copy()
-    clean = clean.rename(columns={text_col: "text", label_col: "label"})
-    clean = clean.dropna(subset=["text", "label"])
-    clean["text"] = clean["text"].astype(str).str.strip()
-    clean = clean[clean["text"].ne("")]
-    clean["labels"] = map_labels(clean["label"])
-    clean = clean[["text", "labels"]].drop_duplicates(subset=["text"]).reset_index(drop=True)
-    print(f"Training rows after cleaning: {len(clean)}")
-
-    splits = split_df(clean, seed=args.seed)
     tokenizer = AutoTokenizer.from_pretrained(args.model)
     model = AutoModelForSequenceClassification.from_pretrained(args.model, num_labels=3)
 
@@ -256,6 +296,10 @@ def main() -> None:
     )
 
     trainer.train()
+    val_metrics = trainer.evaluate(val_ds)
+    print("Validation metrics:", val_metrics)
+    save_metrics_json(args.output_dir, "validation_metrics.json", val_metrics)
+
     pred_output = trainer.predict(test_ds)
     test_metrics = compute_metrics((pred_output.predictions, pred_output.label_ids))
     if "test_loss" in pred_output.metrics:

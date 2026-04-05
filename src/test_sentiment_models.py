@@ -36,6 +36,24 @@ def build_fingpt_prompt(text: str) -> str:
     )
 
 
+def build_fingpt_messages(text: str) -> list[dict[str, str]]:
+    return [
+        {
+            "role": "system",
+            "content": "You are a financial sentiment classifier. Return only one label: positive, neutral, or negative.",
+        },
+        {"role": "user", "content": f"Headline: {text}\nSentiment:"},
+    ]
+
+
+def render_fingpt_input(tokenizer: AutoTokenizer, text: str) -> str:
+    messages = build_fingpt_messages(text)
+    chat_template = getattr(tokenizer, "chat_template", None)
+    if chat_template:
+        return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    return build_fingpt_prompt(text)
+
+
 def normalize_label_text(generated: str) -> str:
     out = generated.strip().lower()
     if "positive" in out:
@@ -105,7 +123,7 @@ def predict_fingpt(
     raw_outputs: list[str] = []
     with torch.no_grad():
         for idx, text in enumerate(texts, start=1):
-            prompt = build_fingpt_prompt(text)
+            prompt = render_fingpt_input(tokenizer, text)
             enc = tokenizer(prompt, truncation=True, max_length=max_length, return_tensors="pt").to(device)
             out_ids = model.generate(
                 **enc,
