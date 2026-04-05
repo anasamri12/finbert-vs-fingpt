@@ -110,13 +110,15 @@ def predict_fingpt(
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
+    use_device_map = "auto" if device.type == "cuda" else None
     base_model = AutoModelForCausalLM.from_pretrained(
         base_model_id,
         torch_dtype=torch.float16 if device.type == "cuda" else torch.float32,
-        device_map="auto" if device.type == "cuda" else None,
+        device_map=use_device_map,
     )
     model = base_model if adapter_id is None else PeftModel.from_pretrained(base_model, adapter_id)
-    model.to(device)
+    if use_device_map is None:
+        model.to(device)
     model.eval()
 
     labels: list[str] = []
