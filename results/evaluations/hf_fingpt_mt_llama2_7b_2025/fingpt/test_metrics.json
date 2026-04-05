@@ -1,0 +1,16 @@
+{
+  "accuracy": 0.27,
+  "adapter_source": "FinGPT/fingpt-mt_llama2-7b_lora",
+  "f1_macro": 0.17482855211049939,
+  "f1_weighted": 0.16974210373804696,
+  "input_csv": "data/human_labelled/news_human_label_sample_2025_100_cleaned.csv",
+  "label_column": "sentiment",
+  "model_family": "fingpt",
+  "model_source": "meta-llama/Llama-2-7b-hf",
+  "precision_macro": 0.34822695035461,
+  "precision_weighted": 0.4851702127659575,
+  "recall_macro": 0.3318238993710692,
+  "recall_weighted": 0.27,
+  "rows_scored": 100,
+  "text_column": "text"
+}
