@@ -7,9 +7,9 @@ if ($#argv < 1) then
 endif
 
 set KAGGLE_DATASET = $1
-set DATA_DIR = data/excl_human
+set DATA_DIR = data/kaggle_bundles/excl_human
 set CORPUS_2023_2025 = $DATA_DIR/news_combined_preprocessed_2023_2025_excl_human_cleaned.csv
-set HUMAN_2025 = results/kaggle_news_label/news_human_label_sample_2025_100_cleaned.csv
+set HUMAN_2025 = data/news_labels/news_human_label_sample_2025_100_cleaned.csv
 
 set FINBERT_MODEL = anasamri12/finbert-malaysia-sentiment-run2
 set FINGPT_ADAPTER = anasamri12/fingpt-malaysia-lora-run2
@@ -91,3 +91,4 @@ endif
 echo "[done] Completed both model paths."
 echo "FinBERT base model: $FINBERT_MODEL"
 echo "FinGPT adapter: $FINGPT_ADAPTER"
+

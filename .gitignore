@@ -1,10 +1,13 @@
 .venv/
 .venv_win/
+src/.venv/
 __pycache__/
 *.pyc
 
 # Large/generated artifacts
 results/
+data/*
+!data/README.md
 
 # OS/editor temp files
 ~$*

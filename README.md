@@ -49,3 +49,9 @@ jupyter notebook
 
 - Run Jupyter from the project root so imports like `from src.news_scraper import ...` work.
 - Keep output paths relative to the repo (for example `src/malaysia_news_since_2023.csv`).
+
+## License
+
+This repository's original code is released under the MIT License. See [LICENSE](LICENSE).
+
+Third-party datasets, papers, model checkpoints, and other externally sourced materials remain subject to their own original licenses and terms, and are not relicensed by this repository.
