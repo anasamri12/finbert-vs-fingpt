@@ -126,6 +126,32 @@ def build_eval_prompt(text: str) -> str:
     )
 
 
+def build_messages(text: str, label_id: int | None = None) -> list[dict[str, str]]:
+    content = f"Headline: {text}\nSentiment:"
+    if label_id is not None:
+        content = f"{content} {ID2LABEL[int(label_id)]}"
+    return [
+        {
+            "role": "system",
+            "content": "You are a financial sentiment classifier. Return only one label: positive, neutral, or negative.",
+        },
+        {"role": "user", "content": content},
+    ]
+
+
+def render_prompt_for_tokenizer(tokenizer: AutoTokenizer, text: str, label_id: int | None = None) -> str:
+    chat_template = getattr(tokenizer, "chat_template", None)
+    if chat_template:
+        return tokenizer.apply_chat_template(
+            build_messages(text, label_id),
+            tokenize=False,
+            add_generation_prompt=label_id is None,
+        )
+    if label_id is None:
+        return build_eval_prompt(text)
+    return build_train_text(text, label_id)
+
+
 def normalize_label_text(generated: str) -> int:
     out = generated.strip().lower()
     if "positive" in out:
@@ -162,7 +188,7 @@ def evaluate_generation(
 
     model.eval()
     for _, row in eval_df.iterrows():
-        prompt = build_eval_prompt(str(row["text"]))
+        prompt = render_prompt_for_tokenizer(tokenizer, str(row["text"]))
         inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512).to(model.device)
         with torch.no_grad():
             output_ids = model.generate(
@@ -338,12 +364,17 @@ def main() -> None:
     train_df = splits.train.copy()
     val_df = splits.val.copy()
     test_df = splits.test.copy()
-    train_df["train_text"] = train_df.apply(lambda r: build_train_text(str(r["text"]), int(r["labels"])), axis=1)
-    val_df["train_text"] = val_df.apply(lambda r: build_train_text(str(r["text"]), int(r["labels"])), axis=1)
 
     tokenizer = AutoTokenizer.from_pretrained(args.model, use_fast=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
+
+    train_df["train_text"] = train_df.apply(
+        lambda r: render_prompt_for_tokenizer(tokenizer, str(r["text"]), int(r["labels"])), axis=1
+    )
+    val_df["train_text"] = val_df.apply(
+        lambda r: render_prompt_for_tokenizer(tokenizer, str(r["text"]), int(r["labels"])), axis=1
+    )
 
     quant_config = None
     if torch.cuda.is_available():
