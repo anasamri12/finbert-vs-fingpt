@@ -1,0 +1,16 @@
+{
+  "accuracy": 0.42,
+  "adapter_source": "results/60k_tuning/qwen25_7b_ep1_lr5e5",
+  "f1_macro": 0.3431166486096064,
+  "f1_weighted": 0.39690931744312025,
+  "input_csv": "data/human_labelled/news_human_label_sample_2025_100_cleaned.csv",
+  "label_column": "sentiment",
+  "model_family": "fingpt",
+  "model_source": "Qwen/Qwen2.5-7B-Instruct",
+  "precision_macro": 0.5414908579465542,
+  "precision_weighted": 0.6761181434599156,
+  "recall_macro": 0.43502572898799313,
+  "recall_weighted": 0.42,
+  "rows_scored": 100,
+  "text_column": "text"
+}
