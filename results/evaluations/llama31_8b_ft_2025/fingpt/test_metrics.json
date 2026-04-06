@@ -1,0 +1,16 @@
+{
+  "accuracy": 0.44,
+  "adapter_source": "results/60k_tuning/llama31_8b_ep1_lr1e5",
+  "f1_macro": 0.4311544599531767,
+  "f1_weighted": 0.4580666380434694,
+  "input_csv": "data/human_labelled/news_human_label_sample_2025_100_cleaned.csv",
+  "label_column": "sentiment",
+  "model_family": "fingpt",
+  "model_source": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+  "precision_macro": 0.55625,
+  "precision_weighted": 0.6700624999999999,
+  "recall_macro": 0.46555746140651794,
+  "recall_weighted": 0.44,
+  "rows_scored": 100,
+  "text_column": "text"
+}
