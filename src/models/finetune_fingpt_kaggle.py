@@ -7,6 +7,13 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+try:
+    from .ucl_cache import configure_ucl_scratch_cache
+except ImportError:
+    from src.models.ucl_cache import configure_ucl_scratch_cache
+
+configure_ucl_scratch_cache()
+
 import numpy as np
 import pandas as pd
 import torch

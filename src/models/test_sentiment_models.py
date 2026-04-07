@@ -4,6 +4,13 @@ import argparse
 from pathlib import Path
 import re
 
+try:
+    from .ucl_cache import configure_ucl_scratch_cache
+except ImportError:
+    from src.models.ucl_cache import configure_ucl_scratch_cache
+
+configure_ucl_scratch_cache()
+
 import pandas as pd
 import torch
 from peft import PeftModel
@@ -106,7 +113,12 @@ def predict_fingpt(
     max_length: int = 512,
     max_new_tokens: int = 4,
 ) -> tuple[list[str], list[str]]:
-    tokenizer = AutoTokenizer.from_pretrained(base_model_id, use_fast=True)
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(base_model_id, use_fast=True)
+    except Exception as exc:
+        # Some older LLaMA-family repos only work with the slow tokenizer.
+        print(f"[fingpt] Fast tokenizer load failed for {base_model_id}; retrying with slow tokenizer. ({exc})")
+        tokenizer = AutoTokenizer.from_pretrained(base_model_id, use_fast=False)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
