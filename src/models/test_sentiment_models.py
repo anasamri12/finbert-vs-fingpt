@@ -85,7 +85,14 @@ def build_generation_inputs(
         # Some custom tokenizers (notably ChatGLM2) break inside __call__/pad with newer
         # transformers internals. Fall back to manual encoding for single-prompt generation.
         print(f"[fingpt] Tokenizer __call__ failed; retrying with manual encode. ({exc})")
-        input_ids = tokenizer.encode(prompt, truncation=True, max_length=max_length)
+        if hasattr(tokenizer, "tokenizer") and hasattr(tokenizer.tokenizer, "encode"):
+            input_ids = tokenizer.tokenizer.encode(prompt)
+            if hasattr(tokenizer, "build_inputs_with_special_tokens"):
+                input_ids = tokenizer.build_inputs_with_special_tokens(input_ids)
+            if max_length and len(input_ids) > max_length:
+                input_ids = input_ids[:max_length]
+        else:
+            input_ids = tokenizer.encode(prompt, truncation=True, max_length=max_length)
         enc = BatchEncoding(
             {
                 "input_ids": torch.tensor([input_ids], dtype=torch.long),
