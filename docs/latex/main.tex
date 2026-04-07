@@ -582,42 +582,49 @@ The benchmark was structured in three stages.
 Macro F1-score was treated as the primary metric because the Malaysian news benchmark is class-imbalanced and raw accuracy can be inflated by overpredicting the neutral class. Accuracy, macro precision, macro recall, weighted precision, weighted recall, and weighted F1-score were also recorded for diagnostic analysis.
 
 \section{Results}
-The expanded benchmark sharpened the contrast between discriminative and generative sentiment extraction. Among the zero-shot generative models, Meta-Llama-3.1-8B-Instruct achieved the strongest result on the 2025 development set, followed by Qwen2.5-7B-Instruct. However, supervised FinBERT remained clearly superior overall and was the only model family to retain strong performance on the held-out 2026 evaluation.
+To keep the chapter aligned with the central thesis question of \emph{FinBERT versus FinGPT}, the main results are organised into two focused comparisons. The first comparison follows the FinBERT family from zero-shot baseline to supervised fine-tuning and pseudo-label adaptation. The second comparison follows the most relevant generative baselines: the official public FinGPT checkpoint, the TinyLlama-based FinGPT run2 model, and the strongest modern open LLM candidate, Meta-Llama-3.1-8B-Instruct. Broader exploratory runs, including Qwen-7B, Qwen-3B, Llama-3.2-1B, Llama-3.2-3B, TinyLlama zero-shot, and the public FinGPT Llama2-13B checkpoint, are treated as supplementary evidence rather than the core narrative.
 
 \begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{|l|l|c|c|}
 \hline
-\textbf{Stage} & \textbf{Model} & \textbf{Accuracy} & \textbf{Macro F1} \\
+\textbf{FinBERT Stage} & \textbf{Model} & \textbf{Accuracy} & \textbf{Macro F1} \\
 \hline
-Zero-shot & TinyLlama-1.1B-Chat-v1.0 & 0.25 & 0.133 \\
-Zero-shot & Qwen2.5-3B-Instruct & 0.42 & 0.377 \\
-Zero-shot & Llama-3.2-3B-Instruct & 0.43 & 0.385 \\
-Zero-shot & Qwen2.5-7B-Instruct & 0.46 & 0.410 \\
-Zero-shot & Meta-Llama-3.1-8B-Instruct & 0.47 & 0.458 \\
-Supervised & TinyLlama-based FinGPT run2 & 0.35 & 0.328 \\
-Supervised & Qwen2.5-3B-Instruct + LoRA & 0.42 & 0.394 \\
-Supervised & Qwen2.5-7B-Instruct + LoRA (5e-5) & 0.42 & 0.343 \\
-Supervised & Qwen2.5-7B-Instruct + LoRA (1e-5) & 0.42 & 0.357 \\
-Supervised & Meta-Llama-3.1-8B-Instruct + LoRA & 0.44 & 0.431 \\
-Supervised & Public FinGPT Llama2-7B & 0.27 & 0.175 \\
-Supervised & Public FinGPT Llama2-13B & 0.25 & 0.133 \\
-Supervised & FinBERT run2 & 0.69 & 0.620 \\
-Adapted & TinyLlama-based FinGPT adapted & 0.33 & 0.297 \\
-Adapted & FinBERT adapted & 0.66 & 0.546 \\
+Zero-shot baseline & ProsusAI/FinBERT & 0.25 & 0.250 \\
+60k supervised & FinBERT run2 & 0.69 & 0.620 \\
+Pseudo-label adapted & FinBERT adapted & 0.66 & 0.546 \\
 \hline
 \end{tabular}
-\caption{Summary of key sentiment benchmarking results on the 2025 human-labeled development set. Macro F1-score is the primary model-selection metric.}
-\label{tab:sentiment-benchmark-2025}
+\caption{Main FinBERT-family results on the 2025 human-labeled development set. Macro F1-score is the primary model-selection metric.}
+\label{tab:finbert-family-2025}
 \end{table}
 
-Several patterns are evident from Table~\ref{tab:sentiment-benchmark-2025}. First, the weak early performance of the TinyLlama-based FinGPT baseline was not solely a consequence of the generative formulation itself; replacing the backbone with larger Qwen or Llama instruct models produced substantial zero-shot gains. Second, not all supervised generative adaptation transferred equally well. Qwen-3B improved slightly after LoRA tuning (macro F1 0.394 versus 0.377 zero-shot), but both Qwen-7B LoRA runs remained below the Qwen-7B zero-shot baseline, and the fine-tuned Llama-3.1-8B result (macro F1 0.431) also remained below its own zero-shot baseline of 0.458. Third, the official public-source FinGPT checkpoints transferred poorly to the Malaysian benchmark, with macro F1-scores of only 0.175 for the Llama2-7B multi-task adapter and 0.133 for the Llama2-13B sentiment adapter.
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|l|c|c|}
+\hline
+\textbf{Generative Stage} & \textbf{Model} & \textbf{Accuracy} & \textbf{Macro F1} \\
+\hline
+Official public FinGPT & FinGPT MT Llama2-7B (HF) & 0.27 & 0.175 \\
+Supervised FinGPT run2 & TinyLlama-based FinGPT run2 & 0.35 & 0.328 \\
+Best open zero-shot LLM & Meta-Llama-3.1-8B-Instruct & 0.47 & 0.458 \\
+Llama-8B + LoRA & Meta-Llama-3.1-8B-Instruct + LoRA & 0.44 & 0.431 \\
+\hline
+\end{tabular}
+\caption{Main FinGPT/LLM comparison on the 2025 human-labeled development set.}
+\label{tab:fingpt-family-2025}
+\end{table}
 
-The pseudo-label adaptation experiments produced a negative but informative result. FinBERT adaptation on the recent 2023--2025 pseudo-labeled corpus reduced macro F1 from 0.620 to 0.546 on the 2025 development set, while TinyLlama-based FinGPT adaptation reduced macro F1 from 0.328 to 0.297. This suggests that, in the current setup, pseudo-label noise outweighed any benefit from exposure to more recent unlabeled Malaysian news. For completeness, the selected 60k-supervised FinBERT model was also evaluated on the held-out 2026 benchmark, where it achieved 0.69 accuracy and macro F1 0.598, confirming that the model selection made on the 2025 development set generalized reasonably well.
+Table~\ref{tab:finbert-family-2025} provides the clearest result in the chapter. The supervised FinBERT run2 model dramatically outperformed both the generic zero-shot FinBERT baseline and the adapted FinBERT variant, reaching 0.69 accuracy and macro F1 0.620 on the 2025 benchmark. The pseudo-label adaptation stage remained informative despite being unsuccessful, because it showed that additional recent data did not automatically improve transfer when the labels were noisy. For completeness, the selected 60k-supervised FinBERT model was also evaluated on the held-out 2026 benchmark, where it retained 0.69 accuracy and achieved macro F1 0.598.
+
+Table~\ref{tab:fingpt-family-2025} tells a different story for the generative side. The official public FinGPT checkpoint transferred poorly to the Malaysian benchmark, with macro F1 only 0.175. The TinyLlama-based FinGPT run2 model improved on that baseline and reached macro F1 0.328 after supervised adaptation, but it remained well below FinBERT. The strongest open generative baseline in the focused comparison was Meta-Llama-3.1-8B-Instruct at macro F1 0.458, yet even this stronger decoder model still trailed FinBERT by a wide margin. Moreover, LoRA fine-tuning of Llama-8B reduced macro F1 from 0.458 to 0.431 rather than improving it.
+
+The broader exploratory sweep was still useful, but it is not central to the thesis narrative. Among those supplementary runs, Qwen2.5-7B-Instruct was the second-best zero-shot open LLM at macro F1 0.410, while both Qwen-7B LoRA runs remained below that baseline. The public FinGPT Llama2-13B sentiment adapter also collapsed to near-majority-class behaviour with macro F1 0.133. These additional runs reinforce the main conclusion rather than changing it: larger decoder models improve zero-shot performance, but generative LoRA tuning does not overtake FinBERT in this task.
 
 \section{Summary}
-This chapter establishes four main findings. First, supervised FinBERT is the strongest sentiment model in the current Malaysian benchmark and therefore the most appropriate core signal for downstream forecasting. Second, larger open instruct backbones such as Qwen2.5-7B and Meta-Llama-3.1-8B substantially improve the generative zero-shot baseline relative to TinyLlama, indicating that backbone capacity is a major factor in generative financial sentiment transfer. Third, supervised LoRA tuning of the larger decoder models does not consistently improve transfer to the human-labeled Malaysian benchmark, and the public-source FinGPT checkpoints perform especially weakly. Fourth, pseudo-label adaptation on recent unlabeled news does not improve performance in this study. The remainder of the thesis therefore treats the 60k-supervised FinBERT model as the primary sentiment extractor, while the stronger open generative baselines serve as comparative evidence on the trade-off between accuracy and computational cost.
+This chapter establishes four focused findings. First, the supervised FinBERT run2 model is the strongest sentiment model in the current Malaysian benchmark and therefore the most appropriate core signal for downstream forecasting. Second, the official public FinGPT baseline is weak in this setting, and the TinyLlama-based FinGPT run2 model improves on it but still remains far below FinBERT. Third, Meta-Llama-3.1-8B is the strongest modern open generative baseline tested in the main comparison, but even it does not match FinBERT, and its LoRA-tuned version fails to improve on zero-shot performance. Fourth, pseudo-label adaptation on recent unlabeled news does not improve performance in this study. The remainder of the thesis therefore treats the 60k-supervised FinBERT model as the primary sentiment extractor, while the generative models serve mainly as comparative evidence on the trade-off between architectural flexibility and classification reliability.
 
 
 
