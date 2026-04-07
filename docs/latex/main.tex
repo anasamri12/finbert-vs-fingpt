@@ -654,64 +654,103 @@ All sentiment predictions in this chapter were generated with FinBERT run2, the 
 
 The evaluation proceeded in two stages. In the broad-corpus stage, the full market-wide corpus was used to generate a single daily sentiment series and compared against the KLSE index and a wider set of large-cap stocks. In the filtered stage, the corpus was split into company-specific news subsets and each subset was compared only with its corresponding stock. This second stage provides a direct test of whether company relevance strengthens the sentiment--return relationship.
 \section{Results}
-The broad market-wide analysis produced a largely negative result at the index level. When the full corpus was aggregated into a single daily sentiment series and compared with the KLSE index, correlations were effectively zero at every horizon: Pearson correlation was $-0.008$ at $T$, $-0.001$ at $T{+}1$, and $-0.055$ at $T{+}2$. Directional accuracy also remained close to chance at 0.517, 0.478, and 0.505 respectively. A wider top-10 stock sweep using the same broad corpus produced slightly better directional accuracy for a few individual names, but the correlations remained small; for example, the strongest broad-corpus directional-accuracy values were 0.588 for RHB at $T{+}2$ and 0.568 for Tenaga at $T{+}1$.
 
-It should be noted that the broad KLSE test was conducted over a limited number of matched trading days ($n \approx 31$--49 depending on the lag horizon), which is insufficient for robust statistical inference. The broad-corpus result is therefore treated as indicative rather than conclusive, and the company-filtered analysis, which spans 710--731 matched days per stock, constitutes the primary evidence for this chapter.
+\subsection{Broad Market-Wide Analysis}
 
-These weak broad-corpus results motivated the company-filtered follow-up. Once the news corpus was restricted to company-relevant articles, the same-day relationship became materially stronger for several stocks. Maybank, CIMB, and Tenaga all exhibited moderate positive lag-0 correlation and directional accuracy above 0.64, while RHB improved only modestly. The filtered corpora also provided adequate daily article volume for stable aggregation: the mean number of matched articles per market day was 7.34 for Maybank, 7.01 for CIMB, 5.86 for Tenaga, and 4.57 for RHB. Table~\ref{tab:experiment2-filtered-summary} summarises the contrast between the broad KLSE result and the strongest filtered stock-level results. Table~\ref{tab:experiment2-filtered-lag} presents the full lag profile for each filtered stock.
+The broad market-wide analysis produced a clearly null result. When the full 92,294-article corpus was aggregated into a single daily sentiment series and compared with the KLSE index across 298--299 matched trading days, all correlations were statistically indistinguishable from zero: Pearson correlation was $-0.008$ ($p = 0.892$) at $T$, $-0.001$ ($p = 0.981$) at $T{+}1$, and $-0.055$ ($p = 0.345$) at $T{+}2$. Directional accuracy remained close to chance at 0.517, 0.478, and 0.505 respectively, and OLS $R^2$ values were effectively zero across all horizons. With a mean of 115 articles per market day feeding into the broad aggregate, the absence of signal is not a data-sparsity problem but rather a genuine consequence of pooling heterogeneous macroeconomic, political, and sectoral news into a single index. This strongly supports the signal dilution hypothesis: the broad corpus contains too much irrelevant content for any one return series to be tracked reliably.
+
+\subsection{Company-Filtered Analysis}
+
+Once the corpus was restricted to company-relevant articles, the same-day relationship became materially stronger for three of the four stocks analysed. The filtered corpora provided adequate daily article volume for stable aggregation: the mean articles per market day were 7.34 for Maybank, 7.01 for CIMB, 5.86 for Tenaga, and 4.57 for RHB --- considerably smaller than the broad corpus but tightly focused on each firm.
+
+Table~\ref{tab:experiment2-filtered-summary} contrasts the broad KLSE result with the lag-0 filtered stock results. Table~\ref{tab:experiment2-filtered-lag} presents the full lag profile including p-values and OLS $R^2$. Table~\ref{tab:experiment2-granger} summarises the Granger causality tests.
 
 \begin{table}[htbp]
 \centering
 \small
-\begin{tabular}{|l|l|c|c|c|c|}
+\begin{tabular}{|l|l|c|c|c|c|c|}
 \hline
-\textbf{Setting} & \textbf{Series} & \textbf{Lag} & \textbf{Pearson} & \textbf{Spearman} & \textbf{Dir. Acc.} \\
+\textbf{Setting} & \textbf{Series} & \textbf{Lag} & \textbf{Pearson} & \textbf{$p$-value} & \textbf{Dir. Acc.} & \textbf{OLS $R^2$} \\
 \hline
-Broad corpus & \texttt{\string^KLSE} & $T$ & -0.008 & 0.039 & 0.517 \\
-Broad corpus & \texttt{\string^KLSE} & $T{+}1$ & -0.001 & -0.046 & 0.478 \\
-Broad corpus & \texttt{\string^KLSE} & $T{+}2$ & -0.055 & -0.050 & 0.505 \\
-Filtered corpus & 1155.KL (Maybank) & $T$ & 0.320 & 0.344 & 0.645 \\
-Filtered corpus & 1023.KL (CIMB) & $T$ & 0.342 & 0.365 & 0.645 \\
-Filtered corpus & 5347.KL (Tenaga) & $T$ & 0.337 & 0.345 & 0.653 \\
-Filtered corpus & 1066.KL (RHB) & $T$ & 0.066 & 0.050 & 0.575 \\
+Broad corpus   & \texttt{\string^KLSE}  & $T$     & -0.008 & 0.892 & 0.517 & 0.000 \\
+Broad corpus   & \texttt{\string^KLSE}  & $T{+}1$ & -0.001 & 0.981 & 0.478 & 0.000 \\
+Broad corpus   & \texttt{\string^KLSE}  & $T{+}2$ & -0.055 & 0.345 & 0.505 & 0.003 \\
+\hline
+Filtered ($n$=731) & 1155.KL (Maybank) & $T$ & 0.320 & $6.6{\times}10^{-19}$ & 0.645 & 0.103 \\
+Filtered ($n$=731) & 1023.KL (CIMB)   & $T$ & 0.342 & $1.9{\times}10^{-21}$ & 0.645 & 0.117 \\
+Filtered ($n$=719) & 5347.KL (Tenaga) & $T$ & 0.337 & $1.5{\times}10^{-20}$ & 0.653 & 0.114 \\
+Filtered ($n$=710) & 1066.KL (RHB)    & $T$ & 0.066 & 0.081                 & 0.575 & 0.004 \\
 \hline
 \end{tabular}
-\caption{Comparison between broad-corpus KLSE results and company-filtered stock-level results at lag~0 in Experiment~2. Filtered results are based on 710--731 matched trading days (2023--2025).}
+\caption{Broad-corpus KLSE versus company-filtered lag-0 results. All broad-corpus p-values exceed 0.30, confirming a null result. Filtered results for Maybank, CIMB, and Tenaga are highly significant ($p < 10^{-19}$).}
 \label{tab:experiment2-filtered-summary}
 \end{table}
 
 \begin{table}[htbp]
 \centering
 \small
-\begin{tabular}{|l|c|c|c|c|c|}
+\begin{tabular}{|l|c|c|c|c|c|c|}
 \hline
-\textbf{Stock} & \textbf{Lag} & \textbf{Pearson} & \textbf{Spearman} & \textbf{Dir. Acc.} & \textbf{Coverage} \\
+\textbf{Stock} & \textbf{Lag} & \textbf{Pearson} & \textbf{$p$-value} & \textbf{Spearman} & \textbf{Dir. Acc.} & \textbf{OLS $R^2$} \\
 \hline
-1155.KL (Maybank) & $T$     & 0.320  & 0.344  & 0.645 & 0.860 \\
-1155.KL (Maybank) & $T{+}1$ & -0.024 & -0.049 & 0.483 & 0.862 \\
-1155.KL (Maybank) & $T{+}2$ & 0.002  & 0.011  & 0.502 & 0.863 \\
+1155.KL (Maybank) & $T$     &  0.320 & $6.6{\times}10^{-19}$ &  0.344 & 0.645 & 0.103 \\
+1155.KL (Maybank) & $T{+}1$ & -0.024 & 0.509                 & -0.049 & 0.483 & 0.001 \\
+1155.KL (Maybank) & $T{+}2$ &  0.002 & 0.965                 &  0.012 & 0.502 & 0.000 \\
 \hline
-1023.KL (CIMB)    & $T$     & 0.342  & 0.365  & 0.645 & 0.885 \\
-1023.KL (CIMB)    & $T{+}1$ & 0.052  & 0.031  & 0.518 & 0.885 \\
-1023.KL (CIMB)    & $T{+}2$ & 0.044  & 0.020  & 0.521 & 0.886 \\
+1023.KL (CIMB)    & $T$     &  0.342 & $1.9{\times}10^{-21}$ &  0.365 & 0.645 & 0.117 \\
+1023.KL (CIMB)    & $T{+}1$ &  0.052 & 0.157                 &  0.031 & 0.518 & 0.003 \\
+1023.KL (CIMB)    & $T{+}2$ &  0.044 & 0.234                 &  0.020 & 0.521 & 0.002 \\
 \hline
-5347.KL (Tenaga)  & $T$     & 0.337  & 0.345  & 0.653 & 0.894 \\
-5347.KL (Tenaga)  & $T{+}1$ & 0.033  & 0.045  & 0.526 & 0.892 \\
-5347.KL (Tenaga)  & $T{+}2$ & 0.087  & 0.088  & 0.531 & 0.894 \\
+5347.KL (Tenaga)  & $T$     &  0.337 & $1.5{\times}10^{-20}$ &  0.345 & 0.653 & 0.114 \\
+5347.KL (Tenaga)  & $T{+}1$ &  0.033 & 0.377                 &  0.045 & 0.526 & 0.001 \\
+5347.KL (Tenaga)  & $T{+}2$ &  0.087 & \textbf{0.019}        &  0.088 & 0.531 & 0.008 \\
 \hline
-1066.KL (RHB)     & $T$     & 0.066  & 0.050  & 0.575 & 0.869 \\
-1066.KL (RHB)     & $T{+}1$ & 0.003  & -0.036 & 0.534 & 0.870 \\
-1066.KL (RHB)     & $T{+}2$ & 0.008  & -0.009 & 0.531 & 0.866 \\
+1066.KL (RHB)     & $T$     &  0.066 & 0.081                 &  0.050 & 0.575 & 0.004 \\
+1066.KL (RHB)     & $T{+}1$ &  0.003 & 0.926                 & -0.036 & 0.534 & 0.000 \\
+1066.KL (RHB)     & $T{+}2$ &  0.008 & 0.831                 & -0.009 & 0.531 & 0.000 \\
 \hline
 \end{tabular}
-\caption{Full lag profile for company-filtered stocks in Experiment~2. Coverage denotes the proportion of market days with at least one matched article.}
+\caption{Full lag profile for company-filtered stocks. Bold p-value denotes the only marginally significant T+2 result (Tenaga). Coverage ranges from 0.860--0.894 across all four stocks.}
 \label{tab:experiment2-filtered-lag}
 \end{table}
 
-Five implications follow from Tables~\ref{tab:experiment2-filtered-summary} and~\ref{tab:experiment2-filtered-lag}. First, the weak KLSE index result is not sufficient evidence that sentiment is useless; rather, it suggests that broad aggregation obscures stock-relevant information. Second, company-specific filtering substantially strengthens the relationship for selected firms, especially Maybank, CIMB, and Tenaga, and these lag-0 effects are highly statistically significant. For Maybank, the lag-0 Pearson correlation of 0.320 had $p = 6.59 \times 10^{-19}$, with an OLS coefficient of 0.00620 and $R^2 = 0.103$. For CIMB, the lag-0 Pearson correlation of 0.342 had $p = 1.92 \times 10^{-21}$, with an OLS coefficient of 0.0110 and $R^2 = 0.117$. For Tenaga, the lag-0 Pearson correlation of 0.337 had $p = 1.51 \times 10^{-20}$, with an OLS coefficient of 0.00878 and $R^2 = 0.114$. Third, the effect is predominantly contemporaneous rather than predictive: for Maybank, Pearson correlation fell from 0.320 at $T$ to $-0.024$ at $T{+}1$ and near-zero at $T{+}2$, and similar attenuation occurred for CIMB. This pattern is consistent with the semi-strong form of the Efficient Market Hypothesis (EMH), which predicts that publicly available news is rapidly incorporated into asset prices, leaving little exploitable lead--lag relationship. Fourth, Granger evidence is limited and stock-specific. Maybank showed no significant Granger causality in either direction. CIMB exhibited bidirectional significance at lag~1, suggesting association but not clean one-way predictiveness. Tenaga produced the clearest forward-looking result, with sentiment Granger-causing returns at lag~3 ($p = 0.014$) while the reverse direction remained non-significant. RHB, by contrast, showed no significant lag-0 association ($p = 0.081$) and only reverse Granger significance from returns to sentiment at lag~2 ($p = 0.044$), suggesting a more reactive than predictive signal. Fifth, the weaker result for RHB is plausibly related to data quality and coverage: it had the smallest article flow among the four main filtered stocks, and the directional coverage column confirms that approximately 11--14\% of trading days had no matched articles, meaning the sentiment signal is absent for a non-trivial fraction of the evaluation period.
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Stock} & \textbf{Sentiment $\rightarrow$ Returns} & \textbf{$p$-value} & \textbf{Returns $\rightarrow$ Sentiment} & \textbf{$p$-value} \\
+\hline
+\texttt{\string^KLSE} (broad) & No  & 0.263 & No  & 0.506 \\
+1155.KL (Maybank)             & No  & 0.277 & No  & 0.247 \\
+1023.KL (CIMB)                & \textbf{Yes} & \textbf{0.008} & \textbf{Yes} & \textbf{0.012} \\
+5347.KL (Tenaga)              & \textbf{Yes} & \textbf{0.014} & No  & 0.253 \\
+1066.KL (RHB)                 & No  & 0.186 & \textbf{Yes} & \textbf{0.044} \\
+\hline
+\end{tabular}
+\caption{Granger causality test results at $\alpha = 0.05$. Tenaga shows clean one-directional Granger causality from sentiment to returns. CIMB shows bidirectional significance. RHB shows only the reverse direction.}
+\label{tab:experiment2-granger}
+\end{table}
+
+\subsection{Discussion}
+
+Five implications follow from the tables above. First, the null broad-corpus result is not attributable to data sparsity --- 115 articles per day were available --- but to signal dilution from pooling heterogeneous news, confirming that article relevance is a precondition for any downstream market signal.
+
+Second, company-specific filtering reveals highly significant same-day associations for Maybank, CIMB, and Tenaga. The lag-0 p-values ($< 10^{-19}$) leave no statistical ambiguity. The univariate OLS $R^2$ values of 0.103--0.117 indicate that sentiment alone explains approximately 10--12\% of same-day return variance for these three stocks, which is economically meaningful for a single unstructured-text predictor.
+
+Third, the signal attenuates sharply beyond lag~0 for most stocks. For Maybank, Pearson correlation fell from 0.320 at $T$ to $-0.024$ at $T{+}1$ and effectively zero at $T{+}2$, with corresponding p-values rising to 0.509 and 0.965 respectively. This pattern is consistent with the semi-strong form of the Efficient Market Hypothesis (EMH), which predicts that publicly available news is rapidly incorporated into asset prices, leaving little exploitable predictive lead--lag relationship.
+
+Fourth, the Granger causality results reveal three distinct stock-level patterns. Tenaga shows the cleanest result: sentiment unidirectionally Granger-causes returns ($p = 0.014$) while the reverse direction is non-significant ($p = 0.253$), indicating that past FinBERT sentiment scores contain information about Tenaga's future returns beyond what past returns alone provide. Tenaga also shows a marginally significant T+2 Pearson correlation of 0.087 ($p = 0.019$), the only instance of forward-looking signal beyond lag~0 in the entire experiment. CIMB exhibits bidirectional Granger significance (sentiment$\to$returns $p = 0.008$, returns$\to$sentiment $p = 0.012$), which is harder to interpret causally and likely reflects a feedback loop between CIMB's corporate activity and press coverage. Maybank, despite its strong contemporaneous correlation, shows no Granger significance in either direction, confirming that its sentiment--return association is purely same-day. RHB shows only the reverse direction (returns$\to$sentiment, $p = 0.044$), suggesting that journalists are reporting on RHB's stock performance rather than driving it.
+
+Fifth, the weaker and largely non-significant RHB result is plausibly explained by its smaller filtered corpus (3,246 articles, mean 4.57 per day) relative to Maybank and CIMB (mean 7.01--7.34 per day), which reduces the daily sentiment signal-to-noise ratio. The 11--14\% of trading days without any matched articles across all four stocks also means the sentiment signal is absent on a non-trivial fraction of evaluation days.
 
 \section{Summary}
-This chapter establishes five main findings. First, broad market-wide sentiment derived from the full 2023--2025 corpus has negligible association with KLSE index returns, though this result is based on a limited number of matched trading days and should be interpreted cautiously. Second, company-specific filtering is crucial: once irrelevant articles are removed, FinBERT sentiment exhibits statistically significant same-day relationships for selected firms, most notably Maybank, CIMB, and Tenaga, with Pearson correlations of 0.32--0.34, p-values far below 0.001, and directional accuracy above 0.64. Third, simple univariate OLS models confirm that the lag-0 effects are economically meaningful but still partial, with $R^2$ values around 0.10--0.12 for Maybank, CIMB, and Tenaga. Fourth, the sentiment signal drops sharply beyond lag~0 for most stocks, making it better interpreted as a same-day market-association measure than as a broad next-day forecasting feature; the clearest exception is Tenaga, which shows one-way Granger significance from sentiment to returns at lag~3. Fifth, the signal is not uniform across all firms: RHB's weaker and mostly non-significant result highlights that corpus size and article relevance quality materially affect downstream performance. These findings motivate the use of relevance-aware, company-filtered sentiment features in the forecasting experiments of Chapter~5, rather than a single broad market-wide aggregate.
+
+This chapter assessed whether FinBERT-derived daily sentiment correlates with Bursa Malaysia market returns under broad and company-filtered conditions across 298--731 matched trading days.
+
+Five findings stand out. First, broad market-wide aggregation of the full 92,294-article corpus yields an entirely null result against the KLSE index (Pearson $= -0.008$, $p = 0.892$ at $T$), despite a mean of 115 articles per day; the null result is attributable to signal dilution rather than data sparsity. Second, company-specific filtering dramatically strengthens the same-day association for three of four stocks analysed: Maybank (Pearson $= 0.320$, $p < 10^{-18}$), CIMB ($r = 0.342$, $p < 10^{-20}$), and Tenaga ($r = 0.337$, $p < 10^{-19}$) all show highly significant contemporaneous correlations with OLS $R^2$ values of 0.103--0.117. Third, the signal is almost entirely contemporaneous: correlations at $T{+}1$ and $T{+}2$ are universally near zero and non-significant for most stocks, consistent with semi-strong EMH and rapid price incorporation of public news. Fourth, Granger causality tests reveal heterogeneous causal structures: Tenaga exhibits clean one-directional predictiveness (sentiment$\to$returns, $p = 0.014$), CIMB shows a bidirectional feedback loop, Maybank no Granger relationship despite strong contemporaneous signal, and RHB only the reverse (returns$\to$sentiment), suggesting journalists react to RHB's price rather than the reverse. Fifth, RHB is the weakest stock with no significant correlations, consistent with its smaller filtered corpus size (3,246 articles, mean 4.57 per day) introducing greater daily noise.
+
+Taken together, these results establish that FinBERT sentiment is a statistically meaningful co-variate of same-day stock returns when the corpus is appropriately filtered, but its predictive lead--lag utility is limited. Chapter~5 uses this signal as an input feature to LSTM and GRU forecasting models, testing whether its incorporation improves multi-step price forecasts over price-only baselines.
 
 
 
