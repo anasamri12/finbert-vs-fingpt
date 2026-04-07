@@ -418,19 +418,65 @@ def align_rows_to_market_dates(rows: pd.DataFrame, stock: pd.DataFrame, alignmen
     return merged.dropna(subset=["market_date"]).reset_index(drop=True)
 
 
+def summarize_article_counts(market_daily: pd.DataFrame) -> dict[str, float]:
+    if market_daily.empty or "article_count" not in market_daily.columns:
+        return {
+            "mean_articles_per_market_day": np.nan,
+            "median_articles_per_market_day": np.nan,
+            "min_articles_observed_per_market_day": np.nan,
+            "max_articles_per_market_day": np.nan,
+        }
+
+    article_counts = pd.to_numeric(market_daily["article_count"], errors="coerce").dropna()
+    if article_counts.empty:
+        return {
+            "mean_articles_per_market_day": np.nan,
+            "median_articles_per_market_day": np.nan,
+            "min_articles_observed_per_market_day": np.nan,
+            "max_articles_per_market_day": np.nan,
+        }
+
+    return {
+        "mean_articles_per_market_day": float(article_counts.mean()),
+        "median_articles_per_market_day": float(article_counts.median()),
+        "min_articles_observed_per_market_day": float(article_counts.min()),
+        "max_articles_per_market_day": float(article_counts.max()),
+    }
+
+
 def evaluate_signal(score: pd.Series, ret: pd.Series) -> dict[str, float]:
     df = pd.DataFrame({"score": score, "ret": ret}).dropna()
     if len(df) < 5:
         return {
             "n_rows": int(len(df)),
             "pearson_corr": np.nan,
+            "pearson_p_value": np.nan,
             "spearman_corr": np.nan,
+            "spearman_p_value": np.nan,
             "directional_accuracy": np.nan,
             "directional_coverage": np.nan,
+            "ols_intercept": np.nan,
+            "ols_beta": np.nan,
+            "ols_beta_p_value": np.nan,
+            "ols_r_squared": np.nan,
         }
 
     pearson = float(df["score"].corr(df["ret"], method="pearson"))
     spearman = float(df["score"].corr(df["ret"], method="spearman"))
+    pearson_p_value = np.nan
+    spearman_p_value = np.nan
+
+    try:
+        from scipy.stats import pearsonr, spearmanr
+
+        pearson_result = pearsonr(df["score"].to_numpy(), df["ret"].to_numpy())
+        spearman_result = spearmanr(df["score"].to_numpy(), df["ret"].to_numpy())
+        pearson = float(pearson_result.statistic)
+        pearson_p_value = float(pearson_result.pvalue)
+        spearman = float(spearman_result.statistic)
+        spearman_p_value = float(spearman_result.pvalue)
+    except ImportError:
+        pass
 
     pred_dir = np.sign(df["score"].to_numpy())
     true_dir = np.sign(df["ret"].to_numpy())
@@ -442,12 +488,35 @@ def evaluate_signal(score: pd.Series, ret: pd.Series) -> dict[str, float]:
         dir_acc = np.nan
         coverage = 0.0
 
+    ols_intercept = np.nan
+    ols_beta = np.nan
+    ols_beta_p_value = np.nan
+    ols_r_squared = np.nan
+    try:
+        import statsmodels.api as sm
+
+        x = sm.add_constant(df[["score"]].astype(float), has_constant="add")
+        y = df["ret"].astype(float)
+        ols_model = sm.OLS(y, x).fit()
+        ols_intercept = float(ols_model.params.get("const", np.nan))
+        ols_beta = float(ols_model.params.get("score", np.nan))
+        ols_beta_p_value = float(ols_model.pvalues.get("score", np.nan))
+        ols_r_squared = float(ols_model.rsquared)
+    except ImportError:
+        pass
+
     return {
         "n_rows": int(len(df)),
         "pearson_corr": pearson,
+        "pearson_p_value": pearson_p_value,
         "spearman_corr": spearman,
+        "spearman_p_value": spearman_p_value,
         "directional_accuracy": dir_acc,
         "directional_coverage": coverage,
+        "ols_intercept": ols_intercept,
+        "ols_beta": ols_beta,
+        "ols_beta_p_value": ols_beta_p_value,
+        "ols_r_squared": ols_r_squared,
     }
 
 
@@ -526,6 +595,35 @@ def run_granger_tests(
         )
 
     return pd.DataFrame(rows), {"status": "ok", "n_rows": int(len(df)), "maxlag": int(maxlag)}
+
+
+def summarize_granger_results(granger_df: pd.DataFrame) -> dict[str, Any]:
+    if granger_df.empty:
+        return {
+            "score_causes_return_best_lag": np.nan,
+            "score_causes_return_min_p_value": np.nan,
+            "score_causes_return_significant_0_05": False,
+            "return_causes_score_best_lag": np.nan,
+            "return_causes_score_min_p_value": np.nan,
+            "return_causes_score_significant_0_05": False,
+        }
+
+    summary: dict[str, Any] = {}
+    for direction in ("score_causes_return", "return_causes_score"):
+        subset = granger_df.loc[granger_df["direction"] == direction].copy()
+        if subset.empty:
+            summary[f"{direction}_best_lag"] = np.nan
+            summary[f"{direction}_min_p_value"] = np.nan
+            summary[f"{direction}_significant_0_05"] = False
+            continue
+
+        best_row = subset.sort_values(["p_value", "lag"], ascending=[True, True]).iloc[0]
+        min_p_value = float(best_row["p_value"])
+        summary[f"{direction}_best_lag"] = int(best_row["lag"])
+        summary[f"{direction}_min_p_value"] = min_p_value
+        summary[f"{direction}_significant_0_05"] = bool(min_p_value < 0.05)
+
+    return summary
 
 
 def make_plots(
@@ -631,6 +729,7 @@ def main() -> None:
         stock_inputs.append((stock_df, stock_meta))
 
     all_metrics: list[dict[str, Any]] = []
+    granger_summary_rows: list[dict[str, Any]] = []
     combo_meta: list[dict[str, Any]] = []
 
     for pred_csv in pred_files:
@@ -651,6 +750,7 @@ def main() -> None:
             market_daily = market_daily.loc[
                 market_daily["article_count"] >= args.min_articles_per_market_day
             ].reset_index(drop=True)
+            article_stats = summarize_article_counts(market_daily)
 
             merged = market_daily.merge(enriched_stock, left_on="market_date", right_on="date", how="inner")
             merged = merged.sort_values("market_date").reset_index(drop=True)
@@ -672,6 +772,7 @@ def main() -> None:
                 granger_df, granger_meta = run_granger_tests(merged, maxlag=args.granger_maxlag)
             granger_csv = out_dir / f"{combo_tag}_granger_metrics.csv"
             granger_df.to_csv(granger_csv, index=False)
+            granger_summary = summarize_granger_results(granger_df)
 
             if args.skip_plots:
                 plot_meta: dict[str, Any] = {"status": "skipped", "reason": "skip_plots_flag"}
@@ -687,9 +788,23 @@ def main() -> None:
                         "min_date": str(min_date.date()),
                         "max_date": str(max_date.date()) if max_date is not None else None,
                         "min_articles_per_market_day": args.min_articles_per_market_day,
+                        **article_stats,
                         **row,
                     }
                 )
+
+            granger_summary_rows.append(
+                {
+                    "prediction_file": pred_csv,
+                    "stock_source": stock_meta["source_label"],
+                    "alignment": args.alignment,
+                    "min_date": str(min_date.date()),
+                    "max_date": str(max_date.date()) if max_date is not None else None,
+                    "min_articles_per_market_day": args.min_articles_per_market_day,
+                    **article_stats,
+                    **granger_summary,
+                }
+            )
 
             combo_meta.append(
                 {
@@ -705,6 +820,8 @@ def main() -> None:
                     "granger_metrics_csv": str(granger_csv),
                     "plot_meta": plot_meta,
                     "granger_meta": granger_meta,
+                    "article_stats": article_stats,
+                    "granger_summary": granger_summary,
                     "rows_aligned_articles": int(len(aligned_rows)),
                     "rows_market_daily": int(len(market_daily)),
                     "rows_merged_market": int(len(merged)),
@@ -714,6 +831,10 @@ def main() -> None:
     metrics_df = pd.DataFrame(all_metrics)
     metrics_csv = out_dir / "experiment2_metrics.csv"
     metrics_df.to_csv(metrics_csv, index=False)
+
+    granger_summary_df = pd.DataFrame(granger_summary_rows)
+    granger_summary_csv = out_dir / "experiment2_granger_summary.csv"
+    granger_summary_df.to_csv(granger_summary_csv, index=False)
 
     summary = {
         "pred_files": pred_files,
@@ -725,6 +846,7 @@ def main() -> None:
         "min_articles_per_market_day": args.min_articles_per_market_day,
         "combo_meta": combo_meta,
         "metrics_csv": str(metrics_csv),
+        "granger_summary_csv": str(granger_summary_csv),
     }
     summary_json = out_dir / "experiment2_summary.json"
     summary_json.write_text(json.dumps(summary, indent=2), encoding="utf-8")
@@ -741,8 +863,13 @@ def main() -> None:
         else:
             f.write(metrics_df.to_string(index=False))
             f.write("\n")
+        if not granger_summary_df.empty:
+            f.write("\nGranger Summary\n")
+            f.write(granger_summary_df.to_string(index=False))
+            f.write("\n")
 
     print(f"Saved metrics: {metrics_csv}")
+    print(f"Saved granger summary: {granger_summary_csv}")
     print(f"Saved summary: {summary_json}")
     print(f"Saved text summary: {summary_txt}")
 
