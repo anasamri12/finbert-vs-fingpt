@@ -171,6 +171,41 @@ def resolve_input_paths(input_glob: str) -> list[Path]:
     return paths
 
 
+def load_text_only_corpus(input_paths: list[Path], min_date: date) -> tuple[pd.DataFrame, dict[str, object]]:
+    frames: list[pd.DataFrame] = []
+    file_stats: dict[str, int] = {}
+    for path in input_paths:
+        frame = load_date_text_csv(path).copy()
+        frame["source"] = path.stem
+        frame["category"] = ""
+        frame["url"] = ""
+        frame["title"] = frame["text"].astype(str).str.split(".", n=1).str[0].str.strip()
+        frame["body"] = frame["text"].astype(str).str.strip()
+        frame["source_file"] = path.name
+        frames.append(frame[["source", "category", "url", "title", "date", "body", "text", "source_file"]])
+        file_stats[str(path)] = int(len(frame))
+
+    combined = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+    if combined.empty:
+        raise ValueError("No rows were loaded from the text-only corpus inputs.")
+
+    dt = pd.to_datetime(combined["date"], errors="coerce")
+    combined = combined.loc[dt.notna()].copy()
+    dt = pd.to_datetime(combined["date"], errors="coerce")
+    combined = combined.loc[dt.dt.date >= min_date].copy()
+    combined["date"] = dt.loc[combined.index].dt.strftime("%Y-%m-%d")
+    combined["body_chars"] = combined["body"].astype(str).str.len()
+    combined = combined.sort_values(["date", "source"], ascending=[True, True]).reset_index(drop=True)
+
+    report: dict[str, object] = {
+        "input_mode": "text_only_corpus",
+        "input_files": len(input_paths),
+        "rows_per_file_before_clean": file_stats,
+        "rows_final": int(len(combined)),
+    }
+    return combined, report
+
+
 def load_and_clean_sources(
     input_paths: list[Path],
     min_date: date,
@@ -194,6 +229,24 @@ def load_and_clean_sources(
     report["input_files"] = len(input_paths)
     report["rows_per_file_before_clean"] = file_stats
     return cleaned, report
+
+
+def load_and_prepare_inputs(
+    input_paths: list[Path],
+    min_date: date,
+    min_body_chars: int,
+    dedupe_text: bool,
+) -> tuple[pd.DataFrame, dict[str, object]]:
+    sample = pd.read_csv(input_paths[0], nrows=2, dtype=str, keep_default_na=False, low_memory=False, encoding="utf-8-sig")
+    sample_cols = {str(col).strip().lower() for col in sample.columns}
+    if {"date", "text"}.issubset(sample_cols) and not {"title", "body"}.intersection(sample_cols):
+        return load_text_only_corpus(input_paths, min_date=min_date)
+    return load_and_clean_sources(
+        input_paths=input_paths,
+        min_date=min_date,
+        min_body_chars=min_body_chars,
+        dedupe_text=dedupe_text,
+    )
 
 
 def exclude_human_rows(
@@ -279,7 +332,7 @@ def main() -> None:
 
     company_specs = select_company_specs(load_company_specs(args.config_json), args.company)
     input_paths = resolve_input_paths(args.input_glob)
-    cleaned, clean_report = load_and_clean_sources(
+    cleaned, clean_report = load_and_prepare_inputs(
         input_paths=input_paths,
         min_date=min_date,
         min_body_chars=args.min_body_chars,
