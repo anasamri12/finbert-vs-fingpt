@@ -66,18 +66,34 @@
       "lag_metrics_csv": "results/experiment2_finbert_run2_5347_filtered/5347_KL_finbert_run2_preds__5347_lag_metrics.csv",
       "granger_metrics_csv": "results/experiment2_finbert_run2_5347_filtered/5347_KL_finbert_run2_preds__5347_granger_metrics.csv",
       "plot_meta": {
-        "status": "skipped",
-        "reason": "matplotlib_not_installed"
+        "sentiment_vs_returns_png": "results/experiment2_finbert_run2_5347_filtered/5347_KL_finbert_run2_preds__5347_sentiment_vs_returns.png",
+        "lag_heatmap_png": "results/experiment2_finbert_run2_5347_filtered/5347_KL_finbert_run2_preds__5347_lag_heatmap.png",
+        "status": "ok"
       },
       "granger_meta": {
-        "status": "skipped",
-        "reason": "statsmodels_not_installed",
-        "hint": "Install statsmodels to enable Granger causality tests."
+        "status": "ok",
+        "n_rows": 719,
+        "maxlag": 5
+      },
+      "article_stats": {
+        "mean_articles_per_market_day": 5.863888888888889,
+        "median_articles_per_market_day": 6.0,
+        "min_articles_observed_per_market_day": 1.0,
+        "max_articles_per_market_day": 19.0
+      },
+      "granger_summary": {
+        "score_causes_return_best_lag": 3,
+        "score_causes_return_min_p_value": 0.014090895322877715,
+        "score_causes_return_significant_0_05": true,
+        "return_causes_score_best_lag": 4,
+        "return_causes_score_min_p_value": 0.25263709074410867,
+        "return_causes_score_significant_0_05": false
       },
       "rows_aligned_articles": 4222,
       "rows_market_daily": 720,
       "rows_merged_market": 720
     }
   ],
-  "metrics_csv": "results/experiment2_finbert_run2_5347_filtered/experiment2_metrics.csv"
+  "metrics_csv": "results/experiment2_finbert_run2_5347_filtered/experiment2_metrics.csv",
+  "granger_summary_csv": "results/experiment2_finbert_run2_5347_filtered/experiment2_granger_summary.csv"
 }

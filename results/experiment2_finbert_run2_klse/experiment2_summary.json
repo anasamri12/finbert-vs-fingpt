@@ -1,0 +1,99 @@
+{
+  "pred_files": [
+    "results/predictions/finbert_run2_preds_2023_2025.csv"
+  ],
+  "stock_inputs": [
+    {
+      "stock_source": "yahoo_finance",
+      "ticker": "^KLSE",
+      "source_label": "^KLSE",
+      "query_start": "2023-01-01",
+      "query_end_exclusive": "2026-01-01",
+      "rows_after_clean": 735,
+      "date_col": "Date",
+      "close_col": "Adj Close ^KLSE",
+      "date_min": "2023-01-03",
+      "date_max": "2025-12-31",
+      "downloaded_stock_csv": "results/experiment2_finbert_run2_klse/yahoo_KLSE_prices.csv"
+    }
+  ],
+  "alignment": "same_or_next_trading",
+  "lags": [
+    0,
+    1,
+    2
+  ],
+  "min_date": "2023-01-01",
+  "max_date": "2025-12-31",
+  "min_articles_per_market_day": 1,
+  "combo_meta": [
+    {
+      "prediction_file": "results/predictions/finbert_run2_preds_2023_2025.csv",
+      "prediction_meta": {
+        "prediction_file": "results/predictions/finbert_run2_preds_2023_2025.csv",
+        "rows_input": 92294,
+        "rows_after_date_filter": 34424,
+        "date_col": "date",
+        "label_col": "finbert_label",
+        "score_mode": "prob_positive_minus_negative",
+        "pos_prob_col": "finbert_prob_positive",
+        "neg_prob_col": "finbert_prob_negative",
+        "date_min": "2023-01-01",
+        "date_max": "2025-12-12"
+      },
+      "stock_meta": {
+        "stock_source": "yahoo_finance",
+        "ticker": "^KLSE",
+        "source_label": "^KLSE",
+        "query_start": "2023-01-01",
+        "query_end_exclusive": "2026-01-01",
+        "rows_after_clean": 735,
+        "date_col": "Date",
+        "close_col": "Adj Close ^KLSE",
+        "date_min": "2023-01-03",
+        "date_max": "2025-12-31",
+        "downloaded_stock_csv": "results/experiment2_finbert_run2_klse/yahoo_KLSE_prices.csv"
+      },
+      "alignment": "same_or_next_trading",
+      "lags": [
+        0,
+        1,
+        2
+      ],
+      "calendar_daily_csv": "results/experiment2_finbert_run2_klse/finbert_run2_preds_2023_2025_calendar_daily_sentiment.csv",
+      "market_daily_csv": "results/experiment2_finbert_run2_klse/finbert_run2_preds_2023_2025__KLSE_market_daily_sentiment.csv",
+      "merged_market_csv": "results/experiment2_finbert_run2_klse/finbert_run2_preds_2023_2025__KLSE_merged_market.csv",
+      "lag_metrics_csv": "results/experiment2_finbert_run2_klse/finbert_run2_preds_2023_2025__KLSE_lag_metrics.csv",
+      "granger_metrics_csv": "results/experiment2_finbert_run2_klse/finbert_run2_preds_2023_2025__KLSE_granger_metrics.csv",
+      "plot_meta": {
+        "sentiment_vs_returns_png": "results/experiment2_finbert_run2_klse/finbert_run2_preds_2023_2025__KLSE_sentiment_vs_returns.png",
+        "lag_heatmap_png": "results/experiment2_finbert_run2_klse/finbert_run2_preds_2023_2025__KLSE_lag_heatmap.png",
+        "status": "ok"
+      },
+      "granger_meta": {
+        "status": "ok",
+        "n_rows": 298,
+        "maxlag": 5
+      },
+      "article_stats": {
+        "mean_articles_per_market_day": 115.1304347826087,
+        "median_articles_per_market_day": 102.0,
+        "min_articles_observed_per_market_day": 2.0,
+        "max_articles_per_market_day": 418.0
+      },
+      "granger_summary": {
+        "score_causes_return_best_lag": 4,
+        "score_causes_return_min_p_value": 0.26338536568962745,
+        "score_causes_return_significant_0_05": false,
+        "return_causes_score_best_lag": 1,
+        "return_causes_score_min_p_value": 0.5062331131596499,
+        "return_causes_score_significant_0_05": false
+      },
+      "rows_aligned_articles": 34424,
+      "rows_market_daily": 299,
+      "rows_merged_market": 299
+    }
+  ],
+  "metrics_csv": "results/experiment2_finbert_run2_klse/experiment2_metrics.csv",
+  "granger_summary_csv": "results/experiment2_finbert_run2_klse/experiment2_granger_summary.csv"
+}

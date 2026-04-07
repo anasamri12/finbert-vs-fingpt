@@ -1,0 +1,14 @@
+Experiment 2: Sentiment vs Stock Movement
+Prediction files: 1
+Stock inputs: 1
+Alignment: same_or_next_trading
+Lags: [0, 1, 2]
+
+                                     prediction_file stock_source            alignment   min_date   max_date  min_articles_per_market_day  mean_articles_per_market_day  median_articles_per_market_day  min_articles_observed_per_market_day  max_articles_per_market_day  lag       return_col  n_rows  pearson_corr  pearson_p_value  spearman_corr  spearman_p_value  directional_accuracy  directional_coverage  ols_intercept  ols_beta  ols_beta_p_value  ols_r_squared
+results/predictions/finbert_run2_preds_2023_2025.csv        ^KLSE same_or_next_trading 2023-01-01 2025-12-31                            1                    115.130435                           102.0                                   2.0                        418.0    0 return_tplus0_1d     298     -0.007905         0.891909       0.038776          0.504886              0.516779                   1.0       0.000489 -0.000359          0.891909       0.000062
+results/predictions/finbert_run2_preds_2023_2025.csv        ^KLSE same_or_next_trading 2023-01-01 2025-12-31                            1                    115.130435                           102.0                                   2.0                        418.0    1 return_tplus1_1d     299     -0.001396         0.980829      -0.045649          0.431602              0.478261                   1.0       0.000254 -0.000064          0.980829       0.000002
+results/predictions/finbert_run2_preds_2023_2025.csv        ^KLSE same_or_next_trading 2023-01-01 2025-12-31                            1                    115.130435                           102.0                                   2.0                        418.0    2 return_tplus2_1d     299     -0.054837         0.344681      -0.050076          0.388241              0.505017                   1.0       0.000517 -0.002520          0.344681       0.003007
+
+Granger Summary
+                                     prediction_file stock_source            alignment   min_date   max_date  min_articles_per_market_day  mean_articles_per_market_day  median_articles_per_market_day  min_articles_observed_per_market_day  max_articles_per_market_day  score_causes_return_best_lag  score_causes_return_min_p_value  score_causes_return_significant_0_05  return_causes_score_best_lag  return_causes_score_min_p_value  return_causes_score_significant_0_05
+results/predictions/finbert_run2_preds_2023_2025.csv        ^KLSE same_or_next_trading 2023-01-01 2025-12-31                            1                    115.130435                           102.0                                   2.0                        418.0                             4                         0.263385                                 False                             1                         0.506233                                 False
