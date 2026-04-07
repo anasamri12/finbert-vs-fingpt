@@ -1,0 +1,83 @@
+{
+  "pred_files": [
+    "results/predictions/1023_KL_finbert_run2_preds.csv"
+  ],
+  "stock_inputs": [
+    {
+      "stock_source": "yahoo_finance",
+      "ticker": "1023.KL",
+      "source_label": "1023.KL",
+      "query_start": "2023-01-01",
+      "query_end_exclusive": "2026-01-01",
+      "rows_after_clean": 735,
+      "date_col": "Date",
+      "close_col": "Adj Close 1023.KL",
+      "date_min": "2023-01-03",
+      "date_max": "2025-12-31",
+      "downloaded_stock_csv": "results/experiment2_finbert_run2_1023_filtered/yahoo_1023_prices.csv"
+    }
+  ],
+  "alignment": "same_or_next_trading",
+  "lags": [
+    0,
+    1,
+    2
+  ],
+  "min_date": "2023-01-01",
+  "max_date": "2025-12-31",
+  "min_articles_per_market_day": 1,
+  "combo_meta": [
+    {
+      "prediction_file": "results/predictions/1023_KL_finbert_run2_preds.csv",
+      "prediction_meta": {
+        "prediction_file": "results/predictions/1023_KL_finbert_run2_preds.csv",
+        "rows_input": 5132,
+        "rows_after_date_filter": 5132,
+        "date_col": "date",
+        "label_col": "finbert_label",
+        "score_mode": "prob_positive_minus_negative",
+        "pos_prob_col": "finbert_prob_positive",
+        "neg_prob_col": "finbert_prob_negative",
+        "date_min": "2023-01-02",
+        "date_max": "2025-12-31"
+      },
+      "stock_meta": {
+        "stock_source": "yahoo_finance",
+        "ticker": "1023.KL",
+        "source_label": "1023.KL",
+        "query_start": "2023-01-01",
+        "query_end_exclusive": "2026-01-01",
+        "rows_after_clean": 735,
+        "date_col": "Date",
+        "close_col": "Adj Close 1023.KL",
+        "date_min": "2023-01-03",
+        "date_max": "2025-12-31",
+        "downloaded_stock_csv": "results/experiment2_finbert_run2_1023_filtered/yahoo_1023_prices.csv"
+      },
+      "alignment": "same_or_next_trading",
+      "lags": [
+        0,
+        1,
+        2
+      ],
+      "calendar_daily_csv": "results/experiment2_finbert_run2_1023_filtered/1023_KL_finbert_run2_preds_calendar_daily_sentiment.csv",
+      "market_daily_csv": "results/experiment2_finbert_run2_1023_filtered/1023_KL_finbert_run2_preds__1023_market_daily_sentiment.csv",
+      "merged_market_csv": "results/experiment2_finbert_run2_1023_filtered/1023_KL_finbert_run2_preds__1023_merged_market.csv",
+      "lag_metrics_csv": "results/experiment2_finbert_run2_1023_filtered/1023_KL_finbert_run2_preds__1023_lag_metrics.csv",
+      "granger_metrics_csv": "results/experiment2_finbert_run2_1023_filtered/1023_KL_finbert_run2_preds__1023_granger_metrics.csv",
+      "plot_meta": {
+        "status": "skipped",
+        "reason": "matplotlib_not_installed"
+      },
+      "granger_meta": {
+        "status": "skipped",
+        "reason": "statsmodels_not_installed",
+        "hint": "Install statsmodels to enable Granger causality tests."
+      },
+      "rows_aligned_articles": 5132,
+      "rows_market_daily": 732,
+      "rows_merged_market": 732
+    }
+  ],
+  "metrics_csv": "results/experiment2_finbert_run2_1023_filtered/experiment2_metrics.csv"
+}

@@ -1,0 +1,4 @@
+prediction_file,stock_source,alignment,min_date,max_date,min_articles_per_market_day,lag,return_col,n_rows,pearson_corr,spearman_corr,directional_accuracy,directional_coverage
+results/predictions/1066_KL_finbert_run2_preds.csv,1066.KL,same_or_next_trading,2023-01-01,2025-12-31,1,0,return_tplus0_1d,710,0.06562544127362956,0.04989516818361669,0.5753646677471637,0.8690140845070422
+results/predictions/1066_KL_finbert_run2_preds.csv,1066.KL,same_or_next_trading,2023-01-01,2025-12-31,1,1,return_tplus1_1d,710,0.003494297552934887,-0.03612081719490617,0.5339805825242718,0.8704225352112676
+results/predictions/1066_KL_finbert_run2_preds.csv,1066.KL,same_or_next_trading,2023-01-01,2025-12-31,1,2,return_tplus2_1d,709,0.00803857343651333,-0.008682321100630688,0.5309446254071661,0.8660084626234132

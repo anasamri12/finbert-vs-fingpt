@@ -1,0 +1,10 @@
+Experiment 2: Sentiment vs Stock Movement
+Prediction files: 1
+Stock inputs: 1
+Alignment: same_or_next_trading
+Lags: [0, 1, 2]
+
+                                   prediction_file stock_source            alignment   min_date   max_date  min_articles_per_market_day  lag       return_col  n_rows  pearson_corr  spearman_corr  directional_accuracy  directional_coverage
+results/predictions/1066_KL_finbert_run2_preds.csv      1066.KL same_or_next_trading 2023-01-01 2025-12-31                            1    0 return_tplus0_1d     710      0.065625       0.049895              0.575365              0.869014
+results/predictions/1066_KL_finbert_run2_preds.csv      1066.KL same_or_next_trading 2023-01-01 2025-12-31                            1    1 return_tplus1_1d     710      0.003494      -0.036121              0.533981              0.870423
+results/predictions/1066_KL_finbert_run2_preds.csv      1066.KL same_or_next_trading 2023-01-01 2025-12-31                            1    2 return_tplus2_1d     709      0.008039      -0.008682              0.530945              0.866008
