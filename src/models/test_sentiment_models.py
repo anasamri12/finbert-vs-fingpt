@@ -15,6 +15,7 @@ import pandas as pd
 import torch
 from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoModelForSequenceClassification, AutoTokenizer
+from transformers.tokenization_utils_base import BatchEncoding
 
 
 LABEL_ID_TO_TEXT = {0: "negative", 1: "neutral", 2: "positive"}
@@ -72,6 +73,28 @@ def normalize_label_text(generated: str) -> str:
     return "neutral"
 
 
+def build_generation_inputs(
+    tokenizer: AutoTokenizer,
+    prompt: str,
+    device: torch.device,
+    max_length: int,
+) -> BatchEncoding:
+    try:
+        enc = tokenizer(prompt, truncation=True, max_length=max_length, return_tensors="pt")
+    except TypeError as exc:
+        # Some custom tokenizers (notably ChatGLM2) break inside __call__/pad with newer
+        # transformers internals. Fall back to manual encoding for single-prompt generation.
+        print(f"[fingpt] Tokenizer __call__ failed; retrying with manual encode. ({exc})")
+        input_ids = tokenizer.encode(prompt, truncation=True, max_length=max_length)
+        enc = BatchEncoding(
+            {
+                "input_ids": torch.tensor([input_ids], dtype=torch.long),
+                "attention_mask": torch.ones((1, len(input_ids)), dtype=torch.long),
+            }
+        )
+    return enc.to(device)
+
+
 def predict_finbert(
     texts: list[str],
     model_id: str,
@@ -113,12 +136,21 @@ def predict_fingpt(
     max_length: int = 512,
     max_new_tokens: int = 4,
 ) -> tuple[list[str], list[str]]:
+    trust_remote_code = "chatglm" in base_model_id.lower()
     try:
-        tokenizer = AutoTokenizer.from_pretrained(base_model_id, use_fast=True)
+        tokenizer = AutoTokenizer.from_pretrained(
+            base_model_id,
+            use_fast=True,
+            trust_remote_code=trust_remote_code,
+        )
     except Exception as exc:
         # Some older LLaMA-family repos only work with the slow tokenizer.
         print(f"[fingpt] Fast tokenizer load failed for {base_model_id}; retrying with slow tokenizer. ({exc})")
-        tokenizer = AutoTokenizer.from_pretrained(base_model_id, use_fast=False)
+        tokenizer = AutoTokenizer.from_pretrained(
+            base_model_id,
+            use_fast=False,
+            trust_remote_code=trust_remote_code,
+        )
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
@@ -127,6 +159,7 @@ def predict_fingpt(
         base_model_id,
         torch_dtype=torch.float16 if device.type == "cuda" else torch.float32,
         device_map=use_device_map,
+        trust_remote_code=trust_remote_code,
     )
     model = base_model if adapter_id is None else PeftModel.from_pretrained(base_model, adapter_id)
     if use_device_map is None:
@@ -138,7 +171,12 @@ def predict_fingpt(
     with torch.no_grad():
         for idx, text in enumerate(texts, start=1):
             prompt = render_fingpt_input(tokenizer, text)
-            enc = tokenizer(prompt, truncation=True, max_length=max_length, return_tensors="pt").to(device)
+            enc = build_generation_inputs(
+                tokenizer=tokenizer,
+                prompt=prompt,
+                device=device,
+                max_length=max_length,
+            )
             out_ids = model.generate(
                 **enc,
                 max_new_tokens=max_new_tokens,
