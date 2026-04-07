@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 import re
+import types
 
 try:
     from .ucl_cache import configure_ucl_scratch_cache
@@ -102,6 +103,24 @@ def build_generation_inputs(
     return enc.to(device)
 
 
+def patch_chatglm_generation_compat(model: AutoModelForCausalLM) -> None:
+    if hasattr(model, "_extract_past_from_model_output"):
+        return
+
+    def _extract_past_from_model_output(self, outputs, *args, **kwargs):
+        if outputs is None:
+            return None
+        if hasattr(outputs, "past_key_values"):
+            return outputs.past_key_values
+        if isinstance(outputs, dict):
+            return outputs.get("past_key_values")
+        if isinstance(outputs, (tuple, list)) and len(outputs) > 1:
+            return outputs[1]
+        return None
+
+    model._extract_past_from_model_output = types.MethodType(_extract_past_from_model_output, model)
+
+
 def predict_finbert(
     texts: list[str],
     model_id: str,
@@ -171,6 +190,7 @@ def predict_fingpt(
     if trust_remote_code and hasattr(base_model, "config"):
         if not hasattr(base_model.config, "num_hidden_layers") and hasattr(base_model.config, "num_layers"):
             base_model.config.num_hidden_layers = base_model.config.num_layers
+        patch_chatglm_generation_compat(base_model)
     model = base_model if adapter_id is None else PeftModel.from_pretrained(base_model, adapter_id)
     if use_device_map is None:
         model.to(device)
