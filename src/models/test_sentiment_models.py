@@ -168,6 +168,9 @@ def predict_fingpt(
         device_map=use_device_map,
         trust_remote_code=trust_remote_code,
     )
+    if trust_remote_code and hasattr(base_model, "config"):
+        if not hasattr(base_model.config, "num_hidden_layers") and hasattr(base_model.config, "num_layers"):
+            base_model.config.num_hidden_layers = base_model.config.num_layers
     model = base_model if adapter_id is None else PeftModel.from_pretrained(base_model, adapter_id)
     if use_device_map is None:
         model.to(device)
@@ -189,6 +192,7 @@ def predict_fingpt(
                 max_new_tokens=max_new_tokens,
                 do_sample=False,
                 pad_token_id=tokenizer.eos_token_id,
+                use_cache=not trust_remote_code,
             )
             gen = tokenizer.decode(out_ids[0][enc["input_ids"].shape[1] :], skip_special_tokens=True)
             raw_outputs.append(gen)
