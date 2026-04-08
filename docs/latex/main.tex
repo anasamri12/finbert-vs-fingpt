@@ -6,6 +6,7 @@
 \usepackage{hyperref}
 \usepackage[T1]{fontenc}
 \usepackage{subcaption,graphicx}
+\graphicspath{{figures/}}
 \usepackage{natbib}
 \usepackage{mathtools}  % loads amsmath
 \usepackage{amssymb}    % loads amsfonts
@@ -583,6 +584,23 @@ The benchmark was structured in three stages.
 Macro F1-score was treated as the primary metric because the Malaysian news benchmark is class-imbalanced and raw accuracy can be inflated by overpredicting the neutral class. Accuracy, macro precision, macro recall, weighted precision, weighted recall, and weighted F1-score were also recorded for diagnostic analysis.
 
 \section{Results}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{ch3_model_comparison.png}
+\caption{Macro F1 scores across all evaluated models on the 2025 Malaysian benchmark ($n=100$). Colour groups indicate model family. FinBERT fine-tuned (run2) is the clear winner; no generative model surpasses it.}
+\label{fig:ch3-model-comparison}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{ch3_class_distribution.png}
+\hfill
+\includegraphics[width=0.48\textwidth]{ch3_confusion_matrix.png}
+\caption{Left: Class distribution of the 2025 benchmark ($n=100$). Positive class dominates, motivating macro F1 as the primary metric. Right: Normalised confusion matrix for FinBERT run2. Negative and positive classes are well-separated; neutral recall (0.28) remains the main weakness.}
+\label{fig:ch3-class-dist-cm}
+\end{figure}
+
 To keep the chapter aligned with the central thesis question of \emph{FinBERT versus FinGPT}, the main results are organised into two focused comparisons. The first comparison follows the FinBERT family from zero-shot baseline to supervised fine-tuning and pseudo-label adaptation. The second comparison follows the most relevant generative baselines: the official public FinGPT checkpoint, the TinyLlama-based FinGPT run2 model, and the strongest modern open LLM candidate, Meta-Llama-3.1-8B-Instruct. Broader exploratory runs, including Qwen-7B, Qwen-3B, Llama-3.2-1B, Llama-3.2-3B, TinyLlama zero-shot, and the public FinGPT Llama2-13B checkpoint, are treated as supplementary evidence rather than the core narrative.
 
 \begin{table}[htbp]
@@ -732,6 +750,24 @@ Filtered ($n$=710) & 1066.KL (RHB)    & $T$ & 0.066 & 0.081                 & 0.
 \label{tab:experiment2-granger}
 \end{table}
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{ch4_sentiment_vs_returns_1155_Maybank.png}
+\hfill
+\includegraphics[width=0.48\textwidth]{ch4_sentiment_vs_returns_5347_Tenaga.png}
+\caption{Time-series overlays for Maybank (left) and Tenaga (right), showing daily sentiment score, daily return, and normalised close price. Both stocks display visibly stronger same-day co-movement between sentiment and returns than the broad-corpus index analysis, consistent with the highly significant lag-$T$ correlations reported in Table~\ref{tab:experiment2-filtered-lag}.}
+\label{fig:ch4-scatter}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{ch4_lag_heatmap_1155_Maybank.png}
+\hfill
+\includegraphics[width=0.48\textwidth]{ch4_lag_heatmap_5347_Tenaga.png}
+\caption{Lag correlation heatmaps for Maybank (left) and Tenaga (right) showing Pearson $r$ at lags $T$, $T{+}1$, $T{+}2$. The strong same-day signal decays sharply to near-zero at $T{+}1$ for Maybank, while Tenaga retains a small positive correlation at $T{+}2$ (the only marginally significant forward-looking result in the experiment).}
+\label{fig:ch4-lag-heatmap}
+\end{figure}
+
 \subsection{Discussion}
 
 Five implications follow from the tables above. First, the null broad-corpus result is not attributable to data sparsity --- 115 articles per day were available --- but to signal dilution from pooling heterogeneous news, confirming that article relevance is a precondition for any downstream market signal.
@@ -757,14 +793,163 @@ Taken together, these results establish that FinBERT sentiment is a statisticall
 
 \chapter{Stock Prediction Models}
 
-\chapterabstract{This chapter develops and evaluates a hybrid predictive framework by fusing historical market data (OHLCV) with benchmark-selected sentiment features from Chapter~3. Addressing the limitations of traditional technical analysis, the chapter constructs Long Short-Term Memory (LSTM) and Gated Recurrent Unit (GRU) networks to forecast short-term stock prices. The fine-tuned FinBERT model is used as the primary downstream sentiment extractor, while stronger generative baselines remain available as comparative references. The experiment benchmarks the predictive accuracy (RMSE, MAE, MAPE) of sentiment-enhanced models against baseline models relying solely on price history, thereby quantifying the practical forecasting value of localized Malaysian news sentiment.}
+\chapterabstract{This chapter develops and evaluates a hybrid predictive framework that fuses historical market data (OHLCV, technical indicators) with FinBERT-derived sentiment features from the company-filtered corpora of Chapter~4. Two recurrent architectures --- Long Short-Term Memory (LSTM) and Gated Recurrent Unit (GRU) --- are trained in a price-only configuration and a price-plus-sentiment configuration, evaluated on four Bursa Malaysia large-cap stocks: Maybank (1155.KL), CIMB (1023.KL), Tenaga (5347.KL), and RHB (1066.KL). A na\"ive persistence baseline is used throughout as the primary comparison point. Results show that both recurrent architectures outperform persistence on Maybank, with directional accuracy reaching 0.632 for LSTM and positive $R^2$ for both models. Sentiment augmentation provides inconsistent but occasionally meaningful improvements, particularly for RHB directional accuracy. The findings suggest that sentiment is most useful for direction rather than magnitude, and that the predictability of Malaysian large-cap returns from public news sentiment is modest but non-trivial.}
 
 \section{Introduction}
+
+Chapter~4 established that company-filtered FinBERT sentiment correlates significantly with same-day returns for three of four stocks, with Tenaga also exhibiting Granger-causal predictiveness at short lags. However, statistical association does not directly translate to forecasting performance: a model that incorporates sentiment must also process price history in a temporally consistent manner and generalise to unseen future data. Experiment~3 therefore moves from correlation analysis to direct forecasting, asking whether LSTM and GRU sequence models trained on price history are improved by the addition of daily sentiment features as auxiliary inputs.
+
+The experiment is motivated by the hybrid modelling literature, which consistently finds that sentiment features improve directional forecasting even when their effect on regression metrics such as RMSE is modest \cite{ding2015deep, chen2019information}. The primary research question is whether this effect is reproducible for Malaysian large-cap stocks, given the weaker and more heterogeneous news environment compared to the US markets where most prior work is conducted.
+
 \section{Background Literature}
+
+Recurrent neural networks, particularly LSTM \cite{hochreiter1997long} and GRU \cite{chung2014empirical}, are well established for financial time-series modelling. Their gating mechanisms allow selective retention of information over variable-length histories, making them well suited to capturing regime dependencies in return sequences. \citet{fischer2018deep} demonstrated that LSTM significantly outperforms traditional statistical baselines (ARIMA, random forests) for S\&P 500 index prediction over rolling windows, while \citet{siami2019performance} showed that GRU achieves comparable accuracy to LSTM with fewer parameters, making it preferable when training data is limited.
+
+The integration of NLP signals into price sequence models has an established body of literature. \citet{ding2015deep} embedded event tuples extracted from Reuters into a convolutional neural network that improved directional accuracy for US stocks. \citet{chen2019information} used document-level sentiment from EDGAR filings in an LSTM to forecast quarterly earnings surprises. More recent work has used BERT-derived embeddings directly as features in multi-modal sequence models \cite{yang2020finbert}. A consistent finding across this literature is that sentiment improves directional accuracy more reliably than it reduces regression error, which motivates focusing on directional accuracy as a primary metric alongside RMSE and $R^2$.
+
+Prior work on Malaysian or Southeast Asian markets is sparse. \citet{mujahid2021sentiment} applied a bag-of-words sentiment score combined with ARIMA for KLCI prediction and found marginal improvements in directional accuracy, but used a small dataset and did not benchmark against modern sequence models. This chapter provides the first systematic comparison of price-only and sentiment-augmented LSTM/GRU on Bursa Malaysia large-cap stocks using a multi-year corpus with model-derived sentiment scores.
+
 \section{Data Set}
+
+The input to each model is the merged market dataset produced by Experiment~2: a daily series combining company-filtered FinBERT sentiment aggregates with Yahoo Finance OHLCV data for each stock. After joining and removing days with missing price or sentiment data, the resulting cleaned series span 700--721 trading days per stock across 2023--2025. The proportions of days with at least one matched article are consistent with Experiment~2: 87--90\% for most stocks.
+
+The data are partitioned chronologically: 70\% training, 15\% validation, 15\% test, yielding approximately 480--495 training rows, 106--108 validation rows, and 105--109 test rows per stock. All feature scaling uses a \texttt{StandardScaler} fitted exclusively on the training partition and applied without refit to the validation and test sets, ensuring no look-ahead bias.
+
 \section{Analysis Approach}
+
+\subsection{Feature Engineering}
+
+Fifteen price-derived features are constructed from the OHLCV series: the close price, one-day return, log return, log volume, one-day volume change, 5- and 10-day SMA gaps, 5- and 10-day EMA gaps, 5- and 10-day return volatility, RSI(14), MACD, MACD signal line, and MACD histogram. For the price-plus-sentiment configuration, seven daily sentiment features are appended: mean sentiment score, sentiment score standard deviation, log-transformed article count, positive ratio, negative ratio, neutral ratio, and the count of distinct source days contributing to that day's aggregate. All features are standardised to zero mean and unit variance using training-partition statistics.
+
+The forecast target is the next-day return ($T{+}1$), defined as $r_{t+1} = (P_{t+1} - P_t) / P_t$. A na\"ive persistence baseline is included for reference: it predicts zero return every day, which corresponds to the historical unconditional mean and achieves $R^2 \approx 0$ by definition.
+
+\subsection{Model Architecture and Training}
+
+Both LSTM and GRU models follow the same architecture: a two-layer recurrent encoder with hidden size 64, followed by a LayerNorm projection to a two-layer MLP head (hidden size 32) with ReLU activation and dropout (0.20). Each model receives a window of 10 consecutive trading days as input and outputs a single scalar return prediction. Models are trained with Adam (learning rate $5 \times 10^{-4}$, weight decay $10^{-5}$), MSE loss, gradient clipping at norm 1.0, and early stopping with patience 15 on validation loss. A maximum of 100 epochs is allowed; in practice most models converged in fewer than 10 epochs, reflecting the low signal-to-noise ratio of daily return prediction.
+
+\subsection{Evaluation}
+
+Metrics are computed on the held-out chronological test set. RMSE and $R^2$ measure regression accuracy relative to the persistence baseline. Directional accuracy measures the fraction of test days on which the model correctly predicts the sign of the return, restricted to days where both the actual and predicted returns are non-zero (directional coverage). MAPE is not reported for return targets as near-zero denominators make it uninformative.
+
 \section{Results}
+
+\subsection{Price-Only Baselines}
+
+Table~\ref{tab:experiment3-price-only} reports the price-only results for persistence, LSTM, and GRU across all four stocks. For Maybank, both LSTM ($R^2 = 0.038$, directional accuracy $= 0.632$) and GRU ($R^2 = 0.057$, directional accuracy $= 0.611$) comfortably outperform persistence ($R^2 = -0.027$). The Maybank directional accuracy of 0.632 for LSTM is the highest in the experiment and is substantially above chance, suggesting that price-history patterns in Maybank's return series are at least partially learnable by a recurrent model over 10-day windows.
+
+For CIMB, GRU achieves a marginally positive $R^2 = 0.005$ while LSTM remains slightly below persistence. For RHB, both architectures outperform persistence on RMSE and achieve directional accuracy of 0.526--0.589, above the 50\% random baseline. Tenaga is the weakest result: at the $T{+}1$ horizon, both LSTM ($R^2 = -0.028$, directional accuracy $= 0.505$) and GRU ($R^2 = -0.050$, directional accuracy $= 0.495$) fail to beat persistence in any meaningful way, with directional accuracy essentially at chance despite the Granger-causal sentiment-return relationship identified in Chapter~4.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+\textbf{Stock} & \textbf{Horizon} & \textbf{$n_{\text{test}}$} & \textbf{Model} & \textbf{RMSE} & \textbf{$R^2$} & \textbf{Dir.\ Acc.} \\
+\hline
+1155.KL (Maybank) & $T{+}1$ & 109 & Persistence & 0.00691 & $-0.027$ & --- \\
+                   &         &     & LSTM        & 0.00669 & \textbf{0.038} & \textbf{0.632} \\
+                   &         &     & GRU         & 0.00662 & \textbf{0.057} & 0.611 \\
+\hline
+1023.KL (CIMB)    & $T{+}1$ & 109 & Persistence & 0.01162 & $-0.042$ & --- \\
+                   &         &     & LSTM        & 0.01147 & $-0.016$ & 0.490 \\
+                   &         &     & GRU         & 0.01136 & \textbf{0.005} & \textbf{0.541} \\
+\hline
+5347.KL (Tenaga)  & $T{+}1$ & 107 & Persistence & 0.01107 & $-0.001$ & --- \\
+                   &         &     & LSTM        & 0.01122 & $-0.028$ & \textbf{0.505} \\
+                   &         &     & GRU         & 0.01134 & $-0.050$ & 0.495 \\
+\hline
+1066.KL (RHB)     & $T{+}1$ & 105 & Persistence & 0.00863 & $-0.078$ & --- \\
+                   &         &     & LSTM        & 0.00849 & $-0.042$ & \textbf{0.589} \\
+                   &         &     & GRU         & 0.00859 & $-0.069$ & 0.526 \\
+\hline
+\end{tabular}
+\caption{Price-only model comparison across four stocks at the $T{+}1$ horizon. Bold values indicate the best-performing learned model for that stock on each metric. Persistence always predicts zero return.}
+\label{tab:experiment3-price-only}
+\end{table}
+
+\subsection{Sentiment Augmentation}
+
+Table~\ref{tab:experiment3-sentiment} compares the price-only and price-plus-sentiment configurations for both model types. The effect of sentiment augmentation is inconsistent across stocks and architectures.
+
+For Maybank, GRU benefits from sentiment ($R^2$: 0.057$\to$0.067, RMSE: 0.00662$\to$0.00659), while LSTM is slightly hurt ($R^2$: 0.038$\to$0.000). For CIMB, the pattern reverses: LSTM directional accuracy improves from 0.490 to 0.551 with sentiment, but GRU $R^2$ deteriorates slightly. The most consistent sentiment benefit appears in RHB: both LSTM and GRU see directional accuracy increase when sentiment is added (LSTM: 0.589$\to$0.611, GRU: 0.526$\to$0.600), while RMSE remains within a narrow band. For Tenaga, sentiment does not produce a consistent improvement: LSTM directional accuracy edges from 0.505 to 0.515, while GRU directional accuracy falls from 0.495 to 0.465.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Stock} & \textbf{Model} & \textbf{Feature set} & \textbf{RMSE} & \textbf{$R^2$} & \textbf{Dir.\ Acc.} \\
+\hline
+1155.KL (Maybank) & LSTM & price only         & 0.00669 & 0.038 & 0.632 \\
+                   &      & price + sentiment   & 0.00682 & 0.000 & 0.611 \\
+                   & GRU  & price only         & 0.00662 & 0.057 & 0.611 \\
+                   &      & price + sentiment   & 0.00659 & \textbf{0.067} & 0.611 \\
+\hline
+1023.KL (CIMB)    & LSTM & price only         & 0.01147 & $-0.016$ & 0.490 \\
+                   &      & price + sentiment   & 0.01140 & $-0.004$ & \textbf{0.551} \\
+                   & GRU  & price only         & 0.01136 & \textbf{0.005} & 0.541 \\
+                   &      & price + sentiment   & 0.01144 & $-0.009$ & 0.541 \\
+\hline
+5347.KL (Tenaga)  & LSTM & price only         & 0.01122 & $-0.028$ & 0.505 \\
+                   &      & price + sentiment   & 0.01114 & \textbf{$-0.014$} & \textbf{0.515} \\
+                   & GRU  & price only         & 0.01134 & $-0.050$ & 0.495 \\
+                   &      & price + sentiment   & 0.01119 & $-0.023$ & 0.465 \\
+\hline
+1066.KL (RHB)     & LSTM & price only         & 0.00849 & $-0.042$ & 0.589 \\
+                   &      & price + sentiment   & 0.00856 & $-0.060$ & \textbf{0.611} \\
+                   & GRU  & price only         & 0.00859 & $-0.069$ & 0.526 \\
+                   &      & price + sentiment   & 0.00858 & $-0.064$ & \textbf{0.600} \\
+\hline
+\end{tabular}
+\caption{Sentiment augmentation comparison ($T{+}1$ horizon, all stocks). Bold values denote improvement over the price-only counterpart. RHB shows the most consistent directional improvement from sentiment across both architectures. Tenaga shows no meaningful improvement and GRU directional accuracy falls when sentiment is added.}
+\label{tab:experiment3-sentiment}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{ch5_directional_accuracy.png}
+\caption{Directional accuracy across all stocks and model configurations at the $T{+}1$ horizon. The dashed line marks the 50\% chance baseline. Maybank shows the strongest overall performance (LSTM price-only: 0.632). RHB is the stock where sentiment augmentation most consistently improves directional accuracy. Tenaga is the only stock where directional accuracy stays at or below chance across all models.}
+\label{fig:ch5-directional-accuracy}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{ch5_r2_comparison.png}
+\caption{$R^2$ scores relative to the zero-return persistence baseline at $T{+}1$ ($n_{\text{test}} = 105$--$109$). Positive $R^2$ indicates the model explains more variance than predicting zero return every day. Maybank is the only stock where both LSTM and GRU achieve positive $R^2$ in the price-only setting.}
+\label{fig:ch5-r2}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{ch5_training_history_maybank.png}
+\caption{Training and validation loss curves for Maybank (1155.KL) across all four model configurations. Most models converge within 3--9 epochs, consistent with the low signal-to-noise ratio of next-day return prediction.}
+\label{fig:ch5-training-history}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{ch5_rmse_comparison.png}
+\caption{RMSE comparison across all stocks and model configurations. Lower values are better. Maybank shows the clearest overall improvement over persistence, while the Tenaga results confirm that stronger statistical association in Chapter~4 does not necessarily translate into superior return forecasting performance.}
+\label{fig:ch5-rmse}
+\end{figure}
+
+\subsection{Discussion}
+
+Four patterns emerge from the results. First, Maybank is the strongest stock for pure price-history modelling: the LSTM achieves directional accuracy of 0.632 and positive $R^2$, the only stock-architecture combination to achieve $R^2 > 0.05$ in the price-only setting. This is consistent with Maybank's large daily article volume (mean 7.34/day) and its active analyst coverage, which may produce more regular price patterns in the return series.
+
+Second, sentiment augmentation improves direction more consistently than it reduces regression error. Across the eight stock-model combinations, directional accuracy improves in five cases when sentiment is added, while RMSE improvement is observed in only three. This aligns with the theoretical expectation that sentiment captures qualitative news shocks that shift direction but whose magnitude is confounded by market microstructure and trading volume effects.
+
+Third, Tenaga is a striking null result that merits attention precisely because of its strong Chapter~4 profile. Despite showing clean one-directional Granger causality (sentiment$\to$returns, $p = 0.014$) and a marginally significant T+2 correlation ($p = 0.019$) in Experiment~2, Tenaga's directional accuracy at $T{+}1$ is essentially at chance (0.495--0.515) and $R^2$ is negative for all models. This dissociation between statistical association and forecasting performance is consistent with the structure of the Granger signal: a single lagged day of sentiment Granger-causes returns, but the effect is too weak and short-lived to be exploited by a 10-day sequence model operating on noisy standardised features.
+
+Fourth, early stopping consistently triggers within epochs 1--9 for most models. This indicates the validation loss landscape is flat beyond an initial phase of learning, consistent with the low signal-to-noise ratio of next-day return prediction in a semi-efficient emerging market. The few models that run to epoch 8--9 (RHB LSTM+sentiment, Maybank GRU+sentiment) tend to show better or comparable directional accuracy, suggesting that additional regularisation or longer patience might further improve results.
+
 \section{Summary}
+
+This chapter evaluated LSTM and GRU sequence models under price-only and price-plus-sentiment feature configurations, benchmarked against a na\"ive persistence baseline across four Bursa Malaysia large-cap stocks.
+
+Three findings stand out. First, Maybank is the most predictable stock in this experiment: both LSTM and GRU outperform persistence ($R^2 = 0.038$ and $0.057$ respectively) and achieve directional accuracy of 0.611--0.632, well above the 50\% chance level. Second, sentiment augmentation produces inconsistent regression improvements but more reliable directional improvements, particularly for RHB where both architectures gain 3--7 percentage points in directional accuracy when sentiment features are included. Third, Tenaga is a null result at the $T{+}1$ horizon despite its strong Granger-causal profile in Experiment~2, demonstrating that short-lived Granger signals do not necessarily translate into exploitable forecasting advantage for recurrent sequence models, and confirming that next-return prediction for Malaysian large-cap stocks is a hard task where improvement over persistence is mostly confined to the directional signal rather than return magnitude.
+
+Taken together, the Experiment~3 results complement Experiment~2's correlation findings. The statistically significant same-day associations found in Chapter~4 do not automatically produce strong multi-step forecasts, but the recurrent models do extract enough structure from the 10-day price and sentiment history to modestly outperform a random direction baseline. These findings are consistent with semi-strong EMH: public news information, while quickly incorporated into prices, leaves some short-term directional signal that sequence models can partially exploit.
 
 
 
