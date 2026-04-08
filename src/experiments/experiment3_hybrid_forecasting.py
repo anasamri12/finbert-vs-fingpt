@@ -40,8 +40,9 @@ DEFAULT_PRICE_FEATURES = (
     "close",
     "return_1d",
     "log_return_1d",
-    "open_close_pct",
-    "high_low_pct",
+    # open_close_pct and high_low_pct removed: the merged CSV has Adjusted Close in the
+    # "close" column but unadjusted OHLC from Yahoo Finance, making cross-column ratios
+    # unreliable (e.g., intraday gap would read as ~-19% due to the adj/unadj mismatch).
     "volume_log1p",
     "volume_change_1d",
     "sma_5_gap",
@@ -194,21 +195,22 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--target-mode",
         choices=("next_close", "next_return"),
-        default="next_close",
+        default="next_return",
         help="Forecast next close price or next return.",
     )
     parser.add_argument("--horizon", type=int, default=1, help="Prediction horizon in trading days.")
-    parser.add_argument("--sequence-length", type=int, default=20, help="Number of past market days per input sequence.")
+    parser.add_argument("--sequence-length", type=int, default=10, help="Number of past market days per input sequence.")
     parser.add_argument("--train-frac", type=float, default=0.70, help="Chronological train fraction.")
     parser.add_argument("--val-frac", type=float, default=0.15, help="Chronological validation fraction.")
     parser.add_argument("--batch-size", type=int, default=32, help="Batch size.")
-    parser.add_argument("--epochs", type=int, default=40, help="Maximum training epochs per model.")
-    parser.add_argument("--learning-rate", type=float, default=1e-3, help="Optimizer learning rate.")
+    parser.add_argument("--epochs", type=int, default=100, help="Maximum training epochs per model.")
+    parser.add_argument("--learning-rate", type=float, default=5e-4, help="Optimizer learning rate.")
     parser.add_argument("--weight-decay", type=float, default=1e-5, help="Adam weight decay.")
     parser.add_argument("--hidden-size", type=int, default=64, help="Hidden size for LSTM/GRU.")
-    parser.add_argument("--num-layers", type=int, default=1, help="Recurrent layers.")
-    parser.add_argument("--dropout", type=float, default=0.10, help="Dropout for the recurrent head.")
-    parser.add_argument("--patience", type=int, default=8, help="Early stopping patience on validation loss.")
+    parser.add_argument("--num-layers", type=int, default=2, help="Recurrent layers.")
+    parser.add_argument("--dropout", type=float, default=0.20, help="Dropout for the recurrent head.")
+    parser.add_argument("--patience", type=int, default=15, help="Early stopping patience on validation loss.")
+    parser.add_argument("--grad-clip", type=float, default=1.0, help="Gradient clipping max norm (0 to disable).")
     parser.add_argument("--device", default="auto", help="Device: auto, cpu, cuda, cuda:0, ...")
     parser.add_argument("--seed", type=int, default=42, help="Random seed.")
     parser.add_argument(
@@ -485,6 +487,7 @@ def train_model(
     epochs: int,
     patience: int,
     device: torch.device,
+    grad_clip: float = 1.0,
 ) -> tuple[nn.Module, dict[str, Any]]:
     model = SequenceRegressor(
         input_size=input_size,
@@ -512,6 +515,8 @@ def train_model(
             preds = model(batch_x)
             loss = criterion(preds, batch_y)
             loss.backward()
+            if grad_clip > 0:
+                nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
             optimizer.step()
             train_losses.append(float(loss.detach().cpu()))
 
@@ -561,8 +566,13 @@ def evaluate_predictions(
 ) -> dict[str, float]:
     rmse = float(np.sqrt(mean_squared_error(actual, predicted)))
     mae = float(mean_absolute_error(actual, predicted))
-    non_zero = np.abs(actual) > 1e-8
-    mape = float(np.mean(np.abs((actual[non_zero] - predicted[non_zero]) / actual[non_zero])) * 100.0) if non_zero.any() else np.nan
+    # MAPE is only meaningful for next_close (price levels); for next_return the denominator
+    # is near-zero returns which make MAPE explode to meaningless thousands of percent.
+    if target_mode == "next_close":
+        non_zero = np.abs(actual) > 1e-8
+        mape = float(np.mean(np.abs((actual[non_zero] - predicted[non_zero]) / actual[non_zero])) * 100.0) if non_zero.any() else np.nan
+    else:
+        mape = np.nan
     r2 = float(r2_score(actual, predicted))
 
     if target_mode == "next_close":
@@ -685,6 +695,7 @@ def run_single_input(csv_path: str, args: argparse.Namespace, out_dir: Path, dev
                 epochs=args.epochs,
                 patience=args.patience,
                 device=device,
+                grad_clip=args.grad_clip,
             )
 
             pred_scaled = predict_loader(model, split.test_loader, device=device)
