@@ -932,6 +932,13 @@ For Maybank, GRU benefits from sentiment ($R^2$: 0.057$\to$0.067, RMSE: 0.00662$
 
 \begin{figure}[htbp]
 \centering
+\includegraphics[width=\textwidth]{ch5_sentiment_lift.png}
+\caption{Directional accuracy lift from sentiment augmentation (price+sentiment minus price-only) for each stock and model type. Positive bars indicate improvement; negative bars indicate degradation. RHB shows the most consistent positive lift across both LSTM (+2.1\,pp) and GRU (+7.4\,pp). Tenaga shows degradation for GRU ($-3.0$\,pp). CIMB and Maybank show mixed results depending on architecture.}
+\label{fig:ch5-sentiment-lift}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
 \includegraphics[width=\textwidth]{ch5_r2_comparison.png}
 \caption{$R^2$ scores relative to the zero-return persistence baseline at $T{+}1$ ($n_{\text{test}} = 105$--$109$). Positive $R^2$ indicates the model explains more variance than predicting zero return every day. Maybank is the only stock where both LSTM and GRU achieve positive $R^2$ in the price-only setting.}
 \label{fig:ch5-r2}
@@ -949,6 +956,20 @@ For Maybank, GRU benefits from sentiment ($R^2$: 0.057$\to$0.067, RMSE: 0.00662$
 \includegraphics[width=\textwidth]{ch5_rmse_comparison.png}
 \caption{RMSE comparison across all stocks and model configurations. Lower values are better. Maybank shows the clearest overall improvement over persistence, while the Tenaga results confirm that stronger statistical association in Chapter~4 does not necessarily translate into superior return forecasting performance.}
 \label{fig:ch5-rmse}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{ch5_predictions_maybank.png}
+\caption{Predicted versus actual next-day return (\%) on the Maybank (1155.KL) test set. The black line shows the realised return; coloured lines show the LSTM price-only and GRU+Sentiment model predictions. Both models predict near-zero returns on most days (consistent with the low signal-to-noise ratio) but correctly track the direction of moderate-sized moves more often than chance, producing directional accuracy of 0.611--0.632.}
+\label{fig:ch5-pred-maybank}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{ch5_predictions_rhb.png}
+\caption{Predicted versus actual next-day return (\%) on the RHB (1066.KL) test set, comparing LSTM price-only against LSTM+Sentiment. Adding sentiment features shifts the prediction distribution enough to improve directional accuracy from 58.9\,\% to 61.1\,\%, the clearest sentiment lift observed for LSTM across all stocks.}
+\label{fig:ch5-pred-rhb}
 \end{figure}
 
 \subsection{Discussion}
