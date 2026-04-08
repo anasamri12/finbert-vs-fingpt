@@ -1,0 +1,13 @@
+Experiment 3: Hybrid Forecasting
+Input CSV: results/experiment2_finbert_run2_1066_filtered/1066_KL_finbert_run2_preds__1066_merged_market.csv
+Target mode: next_return
+Horizon: 1
+Sequence length: 10
+Device: cuda
+
+                                       dataset                                                                                         input_csv          feature_set model_family target_mode  horizon  sequence_length  n_rows_clean  n_sequences_train  n_sequences_val  n_sequences_test     rmse      mae  mape        r2  directional_accuracy  directional_coverage  best_epoch  best_val_loss
+1066_KL_finbert_run2_preds__1066_merged_market results/experiment2_finbert_run2_1066_filtered/1066_KL_finbert_run2_preds__1066_merged_market.csv           price_only          gru next_return        1               10           700                480              106               105 0.008593 0.006551   NaN -0.068623              0.526316              0.904762         1.0       2.877751
+1066_KL_finbert_run2_preds__1066_merged_market results/experiment2_finbert_run2_1066_filtered/1066_KL_finbert_run2_preds__1066_merged_market.csv           price_only         lstm next_return        1               10           700                480              106               105 0.008485 0.006476   NaN -0.042021              0.589474              0.904762         3.0       2.883620
+1066_KL_finbert_run2_preds__1066_merged_market results/experiment2_finbert_run2_1066_filtered/1066_KL_finbert_run2_preds__1066_merged_market.csv           price_only  persistence next_return        1               10           700                480              106               105 0.008629 0.006539   NaN -0.077656                   NaN              0.000000         NaN            NaN
+1066_KL_finbert_run2_preds__1066_merged_market results/experiment2_finbert_run2_1066_filtered/1066_KL_finbert_run2_preds__1066_merged_market.csv price_plus_sentiment          gru next_return        1               10           700                480              106               105 0.008575 0.006494   NaN -0.064125              0.600000              0.904762         1.0       2.912356
+1066_KL_finbert_run2_preds__1066_merged_market results/experiment2_finbert_run2_1066_filtered/1066_KL_finbert_run2_preds__1066_merged_market.csv price_plus_sentiment         lstm next_return        1               10           700                480              106               105 0.008557 0.006504   NaN -0.059559              0.610526              0.904762         8.0       2.869323
