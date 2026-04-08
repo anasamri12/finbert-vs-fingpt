@@ -481,6 +481,87 @@ def ch5_predictions_maybank(out_dir: Path) -> None:
     savefig(fig, out_dir / "ch5_predictions_maybank.png")
 
 
+def ch5_sentiment_lift(out_dir: Path) -> None:
+    """Bar chart showing directional accuracy delta (sentiment - price-only) per stock."""
+    all_metrics = _load_exp3_metrics()
+    if not all_metrics:
+        print("  [skip] ch5_sentiment_lift: no metrics found")
+        return
+
+    stock_keys = list(STOCKS.keys())
+    stock_labels = [STOCKS[k][0] for k in stock_keys]
+    n_stocks = len(stock_keys)
+    width = 0.30
+    x = np.arange(n_stocks)
+
+    lstm_deltas, gru_deltas = [], []
+    for key in stock_keys:
+        df = all_metrics.get(key)
+        if df is None:
+            lstm_deltas.append(np.nan)
+            gru_deltas.append(np.nan)
+            continue
+        def da(mf, fs):
+            row = df[(df["model_family"] == mf) & (df["feature_set"] == fs)]
+            return float(row["directional_accuracy"].values[0]) if not row.empty else np.nan
+
+        lstm_deltas.append(da("lstm", "price_plus_sentiment") - da("lstm", "price_only"))
+        gru_deltas.append(da("gru",  "price_plus_sentiment") - da("gru",  "price_only"))
+
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.bar(x - width / 2, lstm_deltas, width=width, label="LSTM", color="#2166ac", edgecolor="white")
+    ax.bar(x + width / 2, gru_deltas,  width=width, label="GRU",  color="#d6604d", edgecolor="white")
+
+    for bars, vals in [(x - width / 2, lstm_deltas), (x + width / 2, gru_deltas)]:
+        for xi, v in zip(bars, vals):
+            if not np.isnan(v):
+                va = "bottom" if v >= 0 else "top"
+                offset = 0.002 if v >= 0 else -0.002
+                ax.text(xi, v + offset, f"{v:+.3f}", ha="center", va=va, fontsize=8)
+
+    ax.axhline(0, color="black", linewidth=0.9, linestyle="--")
+    ax.set_xticks(x)
+    ax.set_xticklabels(stock_labels)
+    ax.set_ylabel("Directional Accuracy Lift\n(price+sentiment − price-only)")
+    ax.set_title("Sentiment Augmentation Lift — Directional Accuracy Delta by Stock")
+    ax.legend()
+    savefig(fig, out_dir / "ch5_sentiment_lift.png")
+
+
+def ch5_predictions_rhb(out_dir: Path) -> None:
+    """Predicted vs actual return on RHB test set — price-only vs sentiment model."""
+    base = EXP3_DIR / "1066_KL_finbert_run2_preds__1066_merged_market"
+
+    configs = [
+        ("predictions_lstm_price_only.csv",          "LSTM Price-only",  "#2166ac"),
+        ("predictions_lstm_price_plus_sentiment.csv", "LSTM+Sentiment",   "#d6604d"),
+    ]
+
+    actual = None
+    dates = None
+    fig, ax = plt.subplots(figsize=(12, 4))
+
+    for fname, label, color in configs:
+        path = base / fname
+        if not path.exists():
+            continue
+        df = pd.read_csv(path, parse_dates=["market_date"])
+        if actual is None:
+            actual = df["actual_target"].values * 100
+            dates = df["market_date"].values
+            ax.plot(dates, actual, color="black", linewidth=1.0, label="Actual return", zorder=3)
+        pred = df["predicted_target"].values * 100
+        ax.plot(dates, pred, color=color, linewidth=0.8, alpha=0.8, label=label, zorder=2)
+
+    ax.axhline(0, color="grey", linestyle=":", linewidth=0.7)
+    ax.set_xlabel("Date")
+    ax.set_ylabel("1-day Return (%)")
+    ax.set_title("RHB (1066.KL) — Predicted vs Actual Return on Test Set\n(LSTM: price-only vs price+sentiment)")
+    ax.legend(loc="upper left")
+    fig.autofmt_xdate()
+    savefig(fig, out_dir / "ch5_predictions_rhb.png")
+
+
 def ch5_rmse_comparison(out_dir: Path) -> None:
     """RMSE bar chart across all stocks and models."""
     all_metrics = _load_exp3_metrics()
@@ -554,6 +635,8 @@ def main() -> None:
     ch5_rmse_comparison(out_dir)
     ch5_training_history_maybank(out_dir)
     ch5_predictions_maybank(out_dir)
+    ch5_predictions_rhb(out_dir)
+    ch5_sentiment_lift(out_dir)
 
     print(f"\nDone. All figures saved to {out_dir}")
 
