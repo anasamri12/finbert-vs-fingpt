@@ -120,7 +120,7 @@ def ch3_model_comparison(out_dir: Path) -> None:
         ("FinBERT\nFine-tuned",         "finbert",  0.620),
         ("FinBERT\nAdapted",            "finbert",  0.546),
         ("TinyLlama\nZero-shot",        "fingpt",   0.133),
-        ("FinGPT\n(TinyLlama FT)",      "fingpt",   0.320),
+        ("TinyLlama-LoRA\n(this work)", "fingpt",   0.320),
         ("HF FinGPT\n(LLaMA2-13B)",     "fingpt",   0.133),
         ("Llama-3.1-8B\nZero-shot",     "llama",    0.458),
         ("Llama-3.1-8B\nFT ep1",        "llama",    0.431),
@@ -153,7 +153,7 @@ def ch3_model_comparison(out_dir: Path) -> None:
     # Legend
     patches = [
         mpatches.Patch(color=PALETTE["finbert"], label="FinBERT family"),
-        mpatches.Patch(color=PALETTE["fingpt"],  label="FinGPT / TinyLlama"),
+        mpatches.Patch(color=PALETTE["fingpt"],  label="FinGPT / TinyLlama-LoRA (this work)"),
         mpatches.Patch(color=PALETTE["llama"],   label="Llama-3.1-8B"),
         mpatches.Patch(color=PALETTE["qwen"],    label="Qwen-2.5-7B"),
     ]
