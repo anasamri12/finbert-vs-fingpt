@@ -43,10 +43,6 @@ with News-Driven Insights\\}
 \title{\thesistitle}
 \author{\thesisauthor}
 
-%% Use these commands to set a dedication and epigraph text
-\dedication{Dedication Text}
-\epigraph{Epigraph Text}
-
 \usepackage{doi}
 \usepackage{xurl}
 \hypersetup{bookmarksnumbered,
@@ -69,7 +65,7 @@ with News-Driven Insights\\}
 \maketitle
 %\omittitle
 
-% These lines can be commented out to disable the copyright/dedication/epigraph pages
+% Comment out the next line if you do not want a copyright page
 \makecopyright
 
 \abstract
@@ -77,38 +73,40 @@ This thesis investigates the integration of financial news sentiment into stock 
 
 The research consists of three empirical studies.
 \begin{enumerate}
-    \item \textbf{Sentiment Model Benchmarking}: The first investigation evaluates FinBERT and a family of FinGPT-style generative models on Malaysian financial and political news headlines, assessing zero-shot performance, supervised fine-tuning, and pseudo-label adaptation. The analysis benchmarks sentiment classification accuracy using precision, recall, and macro F1-score, and compares the contextual relevance of sentiment polarity across model families and backbone sizes.
-    
-    \item \textbf{Sentiment vs. Stock Movement}: The second investigation studies the relationship between daily sentiment scores and Bursa Malaysia returns across multiple time lags ($T$, $T{+}1$, $T{+}2$). Correlation, directional-accuracy, and lag analyses are applied first to a broad market-wide corpus and then to company-filtered corpora in order to distinguish signal dilution from genuine stock-specific association.
-    
-    \item \textbf{Stock Price Prediction Models}: The final investigation develops predictive models that combine engineered stock features such as moving averages, RSI, MACD, and volatility with benchmark-selected sentiment scores. Fine-tuned FinBERT serves as the primary downstream sentiment signal, while stronger generative baselines are retained as comparative references. LSTM, GRU, and transformer-based models are trained and benchmarked using RMSE, MAE, and directional accuracy metrics.
+    \item \textbf{Sentiment Model Benchmarking}: The first investigation evaluates FinBERT and a family of FinGPT-style generative models on Malaysian financial and political news headlines, assessing zero-shot performance, supervised fine-tuning, and pseudo-label adaptation. The analysis benchmarks sentiment classification accuracy using precision, recall, and macro F1, and compares the contextual relevance of sentiment polarity across model families and backbone sizes.
+
+    \item \textbf{Sentiment vs. Stock Movement}: The second investigation studies the relationship between daily sentiment scores and Bursa Malaysia returns across multiple time lags ($T$, $T{+}1$, $T{+}2$). Correlation, directional accuracy, and lag analyses are applied first to a broad market-wide corpus and then to company-filtered corpora in order to distinguish signal dilution from genuine stock-specific association.
+
+    \item \textbf{Stock Price Prediction Models}: The final investigation develops hybrid predictive models that fuse engineered price features (moving averages, RSI, MACD, volatility) with FinBERT-derived sentiment scores. LSTM and GRU sequence models are trained in price-only and price-plus-sentiment configurations, and benchmarked using RMSE, $R^2$, and directional accuracy on held-out chronological test sets for four KLSE large-cap stocks.
 \end{enumerate}
 
-The completed benchmark and sentiment--return experiments produce three headline findings. First, the fine-tuned FinBERT run2 model remained the strongest sentiment extractor, achieving macro F1-scores of 0.620 on the 2025 Malaysian benchmark and 0.598 on a held-out 2026 test set. Second, larger open instruct backbones improved zero-shot generative performance, with Meta-Llama-3.1-8B-Instruct reaching macro F1 0.458, but supervised LoRA tuning of Qwen-7B and Llama-8B did not surpass either their own zero-shot baselines or FinBERT. Third, broad market-wide sentiment showed negligible association with KLSE index returns, whereas company-filtered sentiment produced statistically significant same-day relationships for Maybank, CIMB, and Tenaga; however, forward-looking evidence was limited, with the clearest one-way Granger result appearing only for Tenaga.
+The completed benchmark and sentiment--return experiments produce three headline findings. First, the fine-tuned FinBERT run2 model remained the strongest sentiment extractor, achieving macro F1 values of 0.620 on the 2025 Malaysian benchmark and 0.598 on a held-out 2026 test set. Second, larger open instruct backbones improved zero-shot generative performance, with Meta-Llama-3.1-8B-Instruct reaching macro F1 0.458, but supervised LoRA tuning of Qwen-7B and Llama-8B did not surpass either their own zero-shot baselines or FinBERT. Third, broad market-wide sentiment showed negligible association with KLSE index returns, whereas company-filtered sentiment produced statistically significant same-day relationships for Maybank, CIMB, and Tenaga; however, forward-looking evidence was limited, with the clearest one-way Granger result appearing only for Tenaga.
 
 
-The thesis presents following contribution to science:
+The thesis presents the following contributions to science:
 \begin{enumerate}
-    \item \textbf{First Benchmarking of FinBERT vs FinGPT-Style Models on Malaysian News}. This research presents the first comparative analysis between FinBERT and open generative financial LLM workflows for sentiment classification in Malaysian financial and political contexts. It contributes new evidence on model generalization and domain transferability of large language models (LLMs) trained on Western data when applied to emerging markets.
-    
-    \item \textbf{Multimodal Financial Prediction Framework}. The study introduces an integrated forecasting architecture that fuses sentiment features with quantitative stock indicators, contributing to the advancement of hybrid modelling approaches that bridge natural language understanding and financial time-series prediction.
-    
-    \item \textbf{Systematic Evaluation of Open Generative Backbones in an Emerging Market Setting}. By comparing TinyLlama-, Qwen-, and Llama-based generative sentiment models against FinBERT on Malaysian news, this research expands evidence on how open Transformer backbones transfer to financial NLP tasks in emerging markets.
-    
-    \item \textbf{Localized Sentiment Annotation and Analysis}. The creation of a manually annotated Malaysian financial news dataset contributes a valuable resource for future research in regional natural language processing and financial text analytics.
+    \item \textbf{First Benchmarking of FinBERT and Generative LLMs on Malaysian Financial News}. This research presents the first empirical comparison between discriminative (FinBERT) and open generative financial LLM workflows---spanning TinyLlama-LoRA, Qwen, and Llama backbones under zero-shot, supervised, and pseudo-label adaptation settings---for sentiment classification in Malaysian financial and political news. It provides new evidence on model generalisation and domain transferability of LLMs trained on Western data when applied to an emerging-market context.
+
+    \item \textbf{Empirical Quantification of Signal Dilution in Malaysian News Corpora}. By contrasting broad market-wide sentiment (null correlations) against company-filtered sentiment (Pearson $r = 0.32$--$0.34$, $p < 10^{-18}$), the study provides a clean quantitative demonstration of the signal dilution effect in Malaysian financial news. This finding has direct practical implications for how sentiment signals should be constructed for downstream tasks.
+
+    \item \textbf{Granger Causality Characterisation of Sentiment--Return Dynamics for KLSE Stocks}. Heterogeneous causal patterns---unidirectional (Tenaga), bidirectional (CIMB), contemporaneous-only (Maybank), and reverse (RHB)---are documented for four major Bursa Malaysia large-caps, providing a stock-specific picture of sentiment--return dynamics absent from the existing Malaysian market literature.
+
+    \item \textbf{Methodologically Controlled Hybrid LSTM/GRU Forecasting Benchmark}. By targeting next-day returns, employing strictly chronological 70/15/15 data splits, and reporting persistence-baseline comparisons, the study contributes a transparent and reproducible hybrid sentiment-plus-price forecasting benchmark for future Malaysian stock prediction research.
+
+    \item \textbf{Labelled Malaysian Financial News Dataset}. A manually annotated benchmark of 300 English-language news items from Malaysian outlets (100 for model selection, 200 held-out for final evaluation) contributes a valuable low-resource evaluation resource for financial NLP research in Southeast Asia.
 \end{enumerate}
 
 The investigation describes the following impact on industry:
 \begin{enumerate}
     \item \textbf{Enhanced Trading and Investment Decisions}.
     Sentiment-augmented prediction models allow local traders and asset managers to react more quickly to market-moving news, improving buy/sell decision accuracy.
-    
+
     \item \textbf{Real-time Market Monitoring Tools}.
     The research enables the development of lightweight dashboards that summarise Malaysian news sentiment, supporting analysts and fintech platforms in daily market assessment.
-    
+
     \item \textbf{Lowering AI Adoption Barriers for Malaysian Fintech}.
     The proposed multimodal framework provides a practical, low-cost template for financial institutions and startups to integrate NLP-based forecasting into their systems.
-    
+
     \item \textbf{Strengthening Data-driven Innovation in Malaysian Capital Markets}.
     By demonstrating the value of LLM-driven sentiment analysis, the work encourages broader adoption of AI analytics, improving market transparency and investor confidence.
 \end{enumerate}
@@ -119,15 +117,15 @@ See the project code on
 \end{center}
 
 
-% Enter Abstract here
-
-
 \acknowledgments
-% Enter Acknowledgements here
 
+I would like to express my sincere gratitude to my supervisor, Professor Philip Treleaven, who has also been my personal tutor, for his guidance, patience, and support throughout this project. His advice and encouragement have been invaluable in shaping this research.
 
-\makededication
-\makeepigraph
+I am also grateful to University College London for providing the computing resources, including GPU access, that made the experimental work in this thesis possible.
+
+Finally, I would like to thank all the lecturers, professors, and teaching assistants who have taught me over the past four years. Through this project, I have been able to put to good use the knowledge and skills developed during the MEng Computer Science course at UCL.
+
+I would also like to thank my family for their constant love and support throughout my studies, especially my mother, Che Zawiah, and my brothers, Zaid and Wajdi.
 
 
 %% Make the various tables of contents
@@ -147,7 +145,7 @@ See the project code on
 
 
 \chapterabstract{%
-This chapter introduces the research problem of enhancing financial forecasting in the Malaysian stock market (KLSE) by integrating unstructured news sentiment with deep learning models. It outlines the motivation for moving beyond traditional technical analysis toward Large Language Models (LLMs), comparing the discriminative FinBERT architecture against a family of FinGPT-style generative backbones. The chapter details the research objectives and provides a high-level overview of the three core experiments: sentiment model benchmarking, statistical correlation analysis, and hybrid stock price prediction. Finally, it highlights the study's contributions to science---specifically the evaluation of open Transformer-based sentiment models in an emerging-market setting---and concludes with an outline of the thesis structure.
+This chapter introduces the research problem of enhancing financial forecasting in the Malaysian stock market (KLSE) by integrating unstructured news sentiment with deep learning models. It outlines the motivation for moving beyond traditional technical analysis toward large language models (LLMs), comparing the discriminative FinBERT architecture against a family of FinGPT-style generative backbones. The chapter details the research objectives and provides a high-level overview of the three core experiments: sentiment model benchmarking, statistical correlation analysis, and hybrid stock price prediction. Finally, it highlights the study's contributions to science---specifically the evaluation of open Transformer-based sentiment models in an emerging-market setting---and concludes with an outline of the thesis structure.
 }
 
 \section{Motivation}
@@ -156,30 +154,30 @@ The motivation for this research arises from the inherent complexity of financia
 
 Although sentiment analysis has long been explored as a tool for stock market prediction, the field is currently undergoing a significant technological paradigm shift that remains under-examined in emerging markets. Early sentiment-based approaches relied on lexicon-driven methods, such as the Loughran--McDonald dictionary, which employ bag-of-words representations that ignore semantic context and often misclassify domain-specific financial terminology \cite{loughran2011liability}. The emergence of discriminative deep learning models, most notably FinBERT, marked a substantial advancement by leveraging transfer learning to capture bidirectional contextual information from financial texts \cite{araci2019finbert, yang2020finbert}. Despite consistently outperforming traditional classifiers, FinBERT remains constrained by its encoder-only architecture: it functions as a static classifier and lacks the ability to perform explicit reasoning or to interpret complex numerical relationships embedded within financial disclosures.
 
-These limitations motivate a shift toward Generative Large Language Models (LLMs). Recent developments, such as FinGPT, employ instruction tuning to reformulate sentiment analysis from a classification task into a generative reasoning task \cite{yang2023fingpt}. This enables models to exhibit broader contextual inference and prompt-conditioned behaviour that are not readily achievable with encoder-only architectures like FinBERT. However, widely publicised financial LLMs, such as BloombergGPT, remain proprietary and computationally prohibitive for academic research, creating significant barriers to reproducibility and accessibility \cite{wu2023bloomberggpt}. FinGPT addresses this challenge by providing an open-source framework that utilises Low-Rank Adaptation (LoRA) to enable efficient fine-tuning of large models at substantially reduced computational cost \cite{hu2022lora, yang2023fingpt}.
+These limitations motivate a shift toward generative large language models (LLMs). Recent developments, such as FinGPT, employ instruction tuning to reformulate sentiment analysis from a classification task into a generative reasoning task \cite{yang2023fingpt, zhang2023instructfingpt}. This enables models to exhibit broader contextual inference and prompt-conditioned behaviour that are not readily achievable with encoder-only architectures like FinBERT. However, widely publicised financial LLMs, such as BloombergGPT, remain proprietary and computationally prohibitive for academic research, creating significant barriers to reproducibility and accessibility \cite{wu2023bloomberggpt}. FinGPT addresses this challenge by providing an open-source framework that utilises Low-Rank Adaptation (LoRA) to enable efficient fine-tuning of large models at substantially reduced computational cost \cite{hu2022lora, yang2023fingpt}.
 
-Critically, a major research gap exists in the application of these advanced architectures to the Malaysian stock market (KLSE). The majority of financial Natural Language Processing research is concentrated on highly liquid and information-rich markets in the United States and China. In contrast, the KLSE exhibits distinct local political and investor-information dynamics that may not be adequately captured by globally trained models without domain-specific adaptation \cite{cheng2019malaysian, tan2025klse}. While recent Malaysian studies have begun to apply machine learning techniques to stock prediction, they typically rely on lexicon-based sentiment analysis, conventional Long Short-Term Memory (LSTM) models, or feature-engineered machine-learning pipelines rather than modern generative LLMs \cite{leong2021stock, sidek2023bursa, chia2023predictive}.
+Critically, a major research gap exists in the application of these advanced architectures to the Malaysian stock market (KLSE). The majority of financial Natural Language Processing research is concentrated on highly liquid and information-rich markets in the United States and China. In contrast, the KLSE exhibits distinct local political and investor-information dynamics that may not be adequately captured by globally trained models without domain-specific adaptation \cite{cheng2019malaysian, tan2025klse}. While recent Malaysian studies have begun to apply machine learning techniques to stock prediction, they typically rely on lexicon-based sentiment analysis, conventional Long Short-Term Memory (LSTM) models, or feature-engineered machine-learning pipelines rather than modern generative LLMs \cite{leong2021stock, tengku2022prediction, sidek2023bursa, chia2023predictive}.
 
-Accordingly, this research is motivated by the need to empirically evaluate whether open generative financial LLMs can match or exceed the static sentiment classification provided by FinBERT within the Malaysian market context. By integrating the strongest benchmarked sentiment signals into LSTM-based time-series forecasting frameworks, this study seeks to determine whether the additional computational complexity associated with Generative AI translates into meaningful predictive gains for investors operating in emerging markets.
+Accordingly, this research is motivated by the need to empirically evaluate whether open generative financial LLMs can match or exceed the static sentiment classification provided by FinBERT within the Malaysian market context. By integrating the strongest benchmarked sentiment signals into recurrent time-series forecasting frameworks, this study seeks to determine whether the additional computational complexity associated with generative AI translates into meaningful predictive gains for investors operating in emerging markets.
 
 \section{Research Objectives}
 
-Based on the problem statement and the research gaps identified within the Malaysian market context, this thesis proposes a set of research objectives designed to empirically evaluate the trade-off between the computational efficiency of discriminative models and the generative reasoning capabilities of Large Language Models (LLMs) in financial forecasting.
+Based on the problem statement and the research gaps identified within the Malaysian market context, this thesis proposes a set of research objectives designed to empirically evaluate the trade-off between the computational efficiency of discriminative models and the generative reasoning capabilities of large language models (LLMs) in financial forecasting.
 
 The primary aim of this research is to develop a robust framework that integrates advanced Natural Language Processing (NLP) techniques with deep learning models to predict stock price movements in Bursa Malaysia (KLSE). To achieve this aim, the study addresses the following specific objectives:
 
 \begin{enumerate}
-    \item \textbf{Benchmark sentiment classification performance of discriminative versus generative models on Malaysian financial news.}  
+    \item \textbf{Benchmark sentiment classification performance of discriminative versus generative models on Malaysian financial news.}
     This objective involves fine-tuning FinBERT, a discriminative encoder-based model, and benchmarking a family of generative instruction-tuned models using a curated dataset of Malaysian financial news. The generative side begins with a TinyLlama-1.1B model fine-tuned using the FinGPT instruction-tuning framework (TinyLlama-LoRA) and is extended to larger Qwen and Llama instruct backbones in order to determine which architectural paradigm and backbone scale more effectively capture local linguistic nuances, financial jargon, and the pronounced neutral-class imbalance characteristic of Malaysian corporate reporting.
 
-    \item \textbf{Quantify the relationship between extracted sentiment signals and KLSE stock returns.}  
+    \item \textbf{Quantify the relationship between extracted sentiment signals and KLSE stock returns.}
     This objective seeks to statistically analyse whether sentiment scores produced by the strongest benchmarked models are associated with realised price movement in Bursa Malaysia. The analysis first measures broad corpus correlations against the KLSE index and major stocks, and then tests whether company-specific news filtering yields stronger stock-level relationships.
 
-    \item \textbf{Develop and evaluate hybrid deep learning models for time-series forecasting.}  
-    This objective focuses on constructing hybrid forecasting pipelines that integrate unstructured sentiment information with structured historical price data (Open, High, Low, Close, and Volume). By incorporating sentiment scores as auxiliary features within Long Short-Term Memory (LSTM) networks, the study assesses whether narrative-driven signals improve forecasting performance, as measured by Root Mean Square Error (RMSE), $R^2$, and directional accuracy, relative to price-only baselines.
+    \item \textbf{Develop and evaluate hybrid deep learning models for time-series forecasting.}
+    This objective focuses on constructing hybrid forecasting pipelines that integrate unstructured sentiment information with structured historical price data (Open, High, Low, Close, and Volume). By incorporating sentiment scores as auxiliary features within Long Short-Term Memory (LSTM) and Gated Recurrent Unit (GRU) networks, the study assesses whether narrative-driven signals improve forecasting performance, as measured by Root Mean Square Error (RMSE), $R^2$, and directional accuracy, relative to price-only baselines.
 
-    \item \textbf{Evaluate the computational trade-off between model complexity and predictive performance.}  
-    The final objective examines whether the increased computational cost and inference latency associated with generative models such as FinGPT yield a statistically significant improvement in forecasting accuracy compared to lightweight discriminative models like FinBERT. This analysis is critical for assessing the practical feasibility of deploying Generative AI in real-time or near--real-time trading and decision-support systems within emerging market environments.
+    \item \textbf{Evaluate the computational trade-off between model complexity and predictive performance.}
+The final objective examines whether the increased computational cost and inference latency associated with generative models such as FinGPT yield a statistically significant improvement in forecasting accuracy compared to lightweight discriminative models like FinBERT. This analysis is critical for assessing the practical feasibility of deploying generative AI in real-time or near--real-time trading and decision-support systems within emerging market environments.
 \end{enumerate}
 
 \section{Research Experiments}
@@ -187,47 +185,47 @@ The primary aim of this research is to develop a robust framework that integrate
 This thesis adopts a progressive empirical design that begins with an evaluation of the linguistic capabilities of domain-specific sentiment models, advances to a statistical analysis of the relationship between sentiment signals and market returns, and culminates in an out-of-sample forecasting study. The research is structured into three interconnected empirical experiments, each addressing a distinct aspect of the proposed research objectives.
 
 \begin{enumerate}
-    \item \textbf{Benchmarking Discriminative versus Generative Sentiment Models on Malaysian Financial Corpora}  
-    The first experiment seeks to empirically characterise the trade-off between \emph{classification accuracy} and \emph{contextual reasoning} within the Malaysian financial domain. FinBERT, a discriminative encoder-based model, has established strong performance in financial sentiment classification through supervised fine-tuning; however, it may struggle with implied or context-dependent sentiment commonly present in complex financial narratives. In contrast, generative FinGPT-style models leverage instruction tuning to reformulate sentiment analysis as a text generation task.  
+    \item \textbf{Benchmarking Discriminative versus Generative Sentiment Models on Malaysian Financial Corpora}
+    The first experiment seeks to empirically characterise the trade-off between \emph{classification accuracy} and \emph{contextual reasoning} within the Malaysian financial domain. FinBERT, a discriminative encoder-based model, has established strong performance in financial sentiment classification through supervised fine-tuning; however, it may struggle with implied or context-dependent sentiment commonly present in complex financial narratives. In contrast, generative FinGPT-style models leverage instruction tuning to reformulate sentiment analysis as a text generation task.
     This experiment benchmarks both paradigms using a curated dataset of Malaysian financial and political news sourced from outlets such as \emph{The Star} and \emph{New Straits Times}, and extends the generative comparison from an initial TinyLlama baseline to larger Qwen and Llama instruct backbones. Zero-shot prompting, supervised fine-tuning, and pseudo-label adaptation are all evaluated, with particular emphasis on neutral-class imbalance and local economic terminology that generic models frequently misclassify.
 
-    \item \textbf{Statistical Analysis of Market Sensitivity to Sentiment Shocks}  
+    \item \textbf{Statistical Analysis of Market Sensitivity to Sentiment Shocks}
     The second experiment examines whether sentiment signals extracted from Malaysian financial news are associated with daily returns in Bursa Malaysia. Moving beyond classification metrics, the study first evaluates broad market-wide sentiment against the KLSE index and selected large-cap stocks, and then repeats the analysis on company-filtered corpora to test whether article relevance materially changes the signal. Pearson and Spearman correlation, directional accuracy, and lag analysis are used to distinguish same-day association from genuine next-day predictive value.
 
-    \item \textbf{Hybrid Forecasting with Benchmark-Selected Sentiment Signals}  
-    The final experiment integrates insights from the preceding studies to develop and evaluate hybrid forecasting architectures. Traditional econometric models and standalone Long Short-Term Memory (LSTM) networks often struggle to capture non-linear dependencies induced by qualitative market events. In this experiment, sentiment representations are fused with historical OHLCV (Open, High, Low, Close, Volume) data to form enriched input sequences for time-series prediction. A strictly chronological hold-out split is employed to prevent look-ahead bias. The predictive performance of a baseline LSTM model is compared against hybrid models incorporating sentiment features from the strongest Chapter~3 sentiment extractors, with fine-tuned FinBERT serving as the primary downstream signal and stronger generative baselines retained as comparative references where useful. Model performance is assessed using RMSE, $R^2$, and directional accuracy, with the primary objective of determining whether localized sentiment improves forecasting accuracy over lightweight price-only baselines in the Malaysian market context.
+    \item \textbf{Hybrid Forecasting with Benchmark-Selected Sentiment Signals}
+    The final experiment integrates insights from the preceding studies to develop and evaluate hybrid forecasting architectures. LSTM and GRU recurrent models are each trained in two configurations: price-only (using 15 engineered technical features) and price-plus-sentiment (adding seven FinBERT-derived sentiment features). A strictly chronological 70/15/15 hold-out split is employed to prevent look-ahead bias, and a na\"ive persistence baseline is used as the primary comparison point. Model performance is assessed using RMSE, $R^2$, and directional accuracy across four Bursa Malaysia large-cap stocks, with the primary objective of determining whether localised sentiment improves directional forecasting over price-only baselines.
 \end{enumerate}
 
 
 \section{Scientific Contributions}
 
 
-This research contributes to the existing literature in several significant ways:
+This research contributes to the existing literature in the following ways:
 
 \begin{enumerate}
-    \item \textbf{First Comparative Benchmarking of FinBERT and FinGPT-Style Models in the Malaysian Market}  
-    To the best of the author's knowledge, this study presents the first empirical comparison between discriminative (encoder-only) and generative (decoder-only) financial language models within the context of Bursa Malaysia (KLSE). While FinBERT has been extensively evaluated on developed markets such as the United States and China, open generative financial LLM workflows have rarely been benchmarked in Malaysian news settings. This thesis addresses that gap by comparing FinBERT against TinyLlama-, Qwen-, and Llama-based generative backbones under zero-shot, supervised, and pseudo-label adaptation settings.
+    \item \textbf{First Comparative Benchmarking of FinBERT and Generative LLMs on Malaysian Financial News}
+    To the best of the author's knowledge, this study presents the first empirical comparison between discriminative (encoder-only) and generative (decoder-only) financial language models within the context of Bursa Malaysia (KLSE). The benchmark spans TinyLlama-LoRA (a TinyLlama-1.1B model fine-tuned using the FinGPT instruction-tuning framework by the author), Qwen-7B, and Llama-3.1-8B backbones evaluated under zero-shot, supervised LoRA fine-tuning, and pseudo-label adaptation settings. This provides new evidence on model generalisation, backbone capacity effects, and adaptation strategy effectiveness for financial NLP in an emerging-market context.
 
-    \item \textbf{Systematic Evaluation of Open Generative Backbones and Adaptation Strategies}  
-    This research advances the methodological understanding of how open generative models transfer to financial sentiment analysis in an emerging market. Rather than treating FinGPT as a single fixed model, the thesis compares multiple backbone scales and families, and evaluates zero-shot prompting, supervised LoRA fine-tuning, and pseudo-label adaptation. The resulting benchmark provides new evidence on how backbone capacity and adaptation strategy affect generative financial NLP performance on Malaysian news.
+    \item \textbf{Empirical Quantification of Signal Dilution in Malaysian Financial News Corpora}
+    By contrasting broad market-wide sentiment (null correlations for all four stocks) against company-filtered sentiment (Pearson $r = 0.32$--$0.34$, $p < 10^{-18}$ for three stocks), this thesis provides a clean quantitative demonstration of the signal dilution effect in Malaysian financial news. This finding has direct implications for how sentiment pipelines should be constructed for downstream market tasks.
 
-    \item \textbf{Development of a Hybrid LLM--LSTM Forecasting Framework}  
-    This thesis contributes to financial time-series forecasting by developing a hybrid predictive architecture that integrates unstructured sentiment signals with structured market data (Open, High, Low, Close, and Volume). In contrast to prior studies that rely on lexicon-based sentiment measures or standalone LSTM models, this research directly incorporates Transformer-derived sentiment representations into the LSTM forecasting pipeline. The proposed framework empirically evaluates whether narrative-driven sentiment information leads to meaningful improvements in forecasting performance, particularly on RMSE, $R^2$, and directional accuracy, relative to unimodal price-based baselines.
+    \item \textbf{Granger Causality Characterisation of Sentiment--Return Dynamics for KLSE Large-Caps}
+    Heterogeneous causal patterns are documented for four major Bursa Malaysia stocks: unidirectional sentiment-to-returns causality for Tenaga ($p = 0.014$), bidirectional feedback for CIMB, contemporaneous-only alignment for Maybank, and reverse causality for RHB. This stock-specific characterisation is absent from the existing Malaysian market literature and provides a nuanced foundation for future forecasting research.
 
-    \item \textbf{Creation of a Labelled Malaysian Financial News Dataset}  
-    A persistent challenge in applying Natural Language Processing to emerging markets is the scarcity of high-quality annotated data. This research contributes a curated and sentiment-labelled dataset of Malaysian financial news, addressing the low-resource limitation frequently cited in the literature. This dataset provides a valuable benchmark for future research on financial NLP in Southeast Asia and supports reproducibility in emerging-market studies.
+    \item \textbf{Methodologically Controlled Hybrid LSTM/GRU Forecasting Benchmark}
+    This thesis contributes a reproducible hybrid sentiment-plus-price forecasting benchmark that targets next-day returns, uses strictly chronological 70/15/15 data splits, fits all scalers on training data only, and evaluates against a na\"ive persistence baseline. The benchmark reveals that sentiment augmentation provides modest, stock-specific directional improvements (most clearly for RHB: up to $+7.4$ pp GRU directional accuracy), supporting evidence-based guidance for future Malaysian forecasting studies.
 
-    \item \textbf{Assessment of Computational Trade-offs in Financial Artificial Intelligence}  
-    Finally, this study offers a practical evaluation of the trade-off between model complexity and predictive performance in financial applications. By contrasting the lightweight and efficient inference of FinBERT with the higher computational cost and latency associated with larger generative backbones, the research provides actionable insights into whether the deployment of such models is justified for real-time or near--real-time trading environments in markets with lower liquidity than major global exchanges.
+    \item \textbf{Creation of a Labelled Malaysian Financial News Dataset}
+    A persistent challenge in applying NLP to emerging markets is the scarcity of high-quality annotated data. This research contributes a manually annotated benchmark of 300 English-language financial news items from Malaysian outlets (100 items for model selection, 200 held-out items for final evaluation), addressing the low-resource limitation and providing a reusable evaluation resource for financial NLP research in Southeast Asia.
 \end{enumerate}
 
 
 \section{Thesis Structure}
 The structure of this thesis is organised as follows:
 \begin{itemize}
-    \item Chapter 2 - \textbf{Background and Literature Review}. The relevant literature and key concepts in the areas of this research are reviewed to introduce the problem and environment of this thesis. The chapter starts by presenting the application domain, specifically the Malaysian stock market (KLSE) and the role of news sentiment in financial volatility. It reviews the evolution of sentiment analysis from lexicon-based approaches to Large Language Models (LLMs) like FinBERT and FinGPT. The chapter concludes with a methodological review of time-series forecasting (LSTM, GRU) and the integration of unstructured text data into financial prediction models.
+    \item Chapter 2 - \textbf{Background and Literature Review}. The relevant literature and key concepts in the areas of this research are reviewed to introduce the problem and environment of this thesis. The chapter starts by presenting the application domain, specifically the Malaysian stock market (KLSE) and the role of news sentiment in financial volatility. It reviews the evolution of sentiment analysis from lexicon-based approaches to large language models (LLMs) like FinBERT and FinGPT. The chapter concludes with a methodological review of time-series forecasting (LSTM, GRU) and the integration of unstructured text data into financial prediction models.
 
-    \item Chapter 3 - \textbf{Sentiment Model Benchmarking}. This chapter provides an empirical benchmarking analysis to compare the capabilities of FinBERT and FinGPT-style generative models in extracting sentiment from Malaysian financial and political news. The study covers zero-shot prompting, supervised fine-tuning, and pseudo-label adaptation on a curated localized benchmark, and identifies the strongest sentiment model for later integration into predictive pipelines.
+\item Chapter 3 - \textbf{Sentiment Model Benchmarking}. This chapter provides an empirical benchmarking analysis to compare the capabilities of FinBERT and FinGPT-style generative models in extracting sentiment from Malaysian financial and political news. The study covers zero-shot prompting, supervised fine-tuning, and pseudo-label adaptation on a curated localised benchmark, and identifies the strongest sentiment model for later integration into predictive pipelines.
 
     \item Chapter 4 - \textbf{Sentiment vs. Stock Movement}. This second study explores the relationship between the daily sentiment scores derived in Chapter 3 and the actual market movements of top Malaysian companies. The analysis contrasts broad market-wide sentiment against company-filtered sentiment, and uses lag analysis ($T$, $T{+}1$, $T{+}2$), Pearson/Spearman correlation, and directional accuracy to test whether sentiment behaves as a same-day association signal or a genuine leading indicator.
 
@@ -243,12 +241,12 @@ The structure of this thesis is organised as follows:
 
 \chapter{Background and Literature Review}
 
-\chapterabstract{This chapter critically examines the theoretical foundations of financial sentiment analysis within the specific context of the Malaysian stock market (KLSE). It traces the methodological evolution of Natural Language Processing (NLP) in finance, highlighting the transition from static lexicon-based approaches to dynamic Large Language Models (LLMs), specifically contrasting the architectural capabilities of encoder-only models (FinBERT) against generative decoder models (FinGPT). Furthermore, the chapter evaluates the existing literature on time-series forecasting, identifying a significant gap in hybrid modelling where unstructured, localized news data is integrated with Deep Learning algorithms (LSTM, GRU) to predict market volatility in emerging economies.}
+\chapterabstract{This chapter critically examines the theoretical foundations of financial sentiment analysis within the specific context of the Malaysian stock market (KLSE). It traces the methodological evolution of Natural Language Processing (NLP) in finance, highlighting the transition from static lexicon-based approaches to dynamic large language models (LLMs), specifically contrasting the architectural capabilities of encoder-only models (FinBERT) against generative decoder models (FinGPT). Furthermore, the chapter evaluates the existing literature on time-series forecasting, identifying a significant gap in hybrid modelling where unstructured, localised news data is integrated with deep-learning algorithms (LSTM, GRU) to predict market volatility in emerging economies.}
 
 \section{Application Domain}
 \subsection{Application Domain: The Malaysian Stock Market (KLSE)}
 
-The application domain of this thesis is Bursa Malaysia, specifically the Kuala Lumpur Composite Index (KLCI), which serves as the primary barometer for the Malaysian equity market. As one of the largest bourses in the Association of Southeast Asian Nations (ASEAN), the KLSE exhibits unique microstructural characteristics that distinguish it from the developed markets (e.g.\ NYSE, NASDAQ) typically used to train financial Large Language Models (LLMs). Relative to the US-centric settings that dominate financial NLP benchmarks, the Malaysian market is more tightly coupled to local socio-political events and retail-investor discussion channels, making it an especially relevant setting for sentiment-based analysis \cite{baker2006investor, cheng2019malaysian, tan2025klse}.
+The application domain of this thesis is Bursa Malaysia, specifically the Kuala Lumpur Composite Index (KLCI), which serves as the primary barometer for the Malaysian equity market. As one of the largest bourses in the Association of Southeast Asian Nations (ASEAN), the KLSE exhibits unique microstructural characteristics that distinguish it from the developed markets (e.g.\ NYSE, NASDAQ) typically used to train financial large language models (LLMs). Relative to the US-centric settings that dominate financial NLP benchmarks, the Malaysian market is more tightly coupled to local socio-political events and retail-investor discussion channels, making it an especially relevant setting for sentiment-based analysis \cite{baker2006investor, cheng2019malaysian, tan2025klse}.
 
 \subsubsection{Sensitivity to News and Events}
 
@@ -262,13 +260,13 @@ Furthermore, standard sentiment lexicons (e.g.\ VADER, Loughran--McDonald) often
 
 \subsubsection{Justification for LLM Integration}
 
-The integration of Artificial Intelligence (AI) into Malaysian stock prediction remains an under-explored research area. Although recent studies have employed Long Short-Term Memory (LSTM), decision-tree, and other machine-learning architectures for KLSE forecasting \cite{leong2021stock, sidek2023bursa, chia2023predictive}, there is a scarcity of work utilising Generative AI and Large Language Models (LLMs) to process unstructured financial text in this market. By focusing on the KLSE, this thesis addresses the critical need to evaluate whether LLMs pre-trained on Western financial data (such as FinBERT) can effectively transfer to emerging markets, or whether generative approaches (such as FinGPT) provide superior adaptability for capturing local market dynamics.
+The integration of Artificial Intelligence (AI) into Malaysian stock prediction remains an under-explored research area. Although recent studies have employed Long Short-Term Memory (LSTM), decision-tree, and other machine-learning architectures for KLSE forecasting \cite{leong2021stock, sidek2023bursa, chia2023predictive}, there is a scarcity of work utilising generative AI and large language models (LLMs) to process unstructured financial text in this market. By focusing on the KLSE, this thesis addresses the critical need to evaluate whether LLMs pre-trained on Western financial data (such as FinBERT) can effectively transfer to emerging markets, or whether generative approaches (such as FinGPT) provide superior adaptability for capturing local market dynamics.
 
 
 
 \subsection{The Evolution of Financial Sentiment Analysis}
 
-The methodology for extracting sentiment from financial text has undergone a significant paradigm shift over the past decade, transitioning from static, dictionary-based approaches to dynamic, context-aware Large Language Models (LLMs). This evolution reflects the growing need to move beyond simple word-frequency analysis toward modelling the complex semantic structures, contextual dependencies, and numerical reasoning inherent in financial reporting.
+The methodology for extracting sentiment from financial text has undergone a significant paradigm shift over the past decade, transitioning from static, dictionary-based approaches to dynamic, context-aware large language models (LLMs) \cite{chen2025bibliometric}. This evolution reflects the growing need to move beyond simple word-frequency analysis toward modelling the complex semantic structures, contextual dependencies, and numerical reasoning inherent in financial reporting.
 
 \subsubsection{Lexicon-Based Approaches}
 
@@ -280,7 +278,7 @@ While lexicon-based methods such as VADER and the LM dictionary remain in use du
 
 To overcome the shortcomings of lexicon-based methods, researchers introduced supervised Machine Learning (ML) algorithms such as Support Vector Machines (SVM) and Random Forest classifiers. In these frameworks, sentiment analysis is formulated as a classification task using features such as N-grams to capture limited contextual information. Although SVM-based models improved classification accuracy relative to static dictionaries, they continued to struggle with the non-linear and long-range dependencies present in natural language.
 
-The emergence of Deep Learning marked a further methodological advancement. Word embedding techniques (e.g.\ Word2Vec and GloVe) enabled words to be represented as dense vectors, allowing models to capture semantic similarity between terms. Recurrent Neural Networks (RNNs), particularly Long Short-Term Memory (LSTM) networks, became widely adopted for sentiment analysis due to their ability to process sequential data and mitigate the vanishing gradient problem. Empirical studies consistently demonstrate that LSTM-based models can outperform traditional ML classifiers in predicting stock market movements from news text, owing to their improved handling of temporal and contextual dependencies \cite{ding2015deep, fischer2018deep, sidek2023bursa}.
+The emergence of deep learning marked a further methodological advancement. Word embedding techniques (e.g.\ Word2Vec and GloVe) enabled words to be represented as dense vectors, allowing models to capture semantic similarity between terms. Recurrent Neural Networks (RNNs), particularly Long Short-Term Memory (LSTM) networks, became widely adopted for sentiment analysis due to their ability to process sequential data and mitigate the vanishing gradient problem. Empirical studies consistently demonstrate that LSTM-based models can outperform traditional ML classifiers in predicting stock market movements from news text, owing to their improved handling of temporal and contextual dependencies \cite{ding2015deep, fischer2018deep, sidek2023bursa}.
 
 \subsubsection{The Transformer Revolution: FinBERT}
 
@@ -290,7 +288,7 @@ FinBERT \cite{araci2019finbert} addresses this limitation through domain-specifi
 
 \subsubsection{Generative AI and Large Language Models}
 
-The most recent stage in the evolution of financial sentiment analysis is the emergence of Generative Artificial Intelligence and decoder-only Large Language Models (LLMs), such as GPT-4, BloombergGPT, and FinGPT. Unlike discriminative models that map text to predefined labels, generative LLMs can produce free-form outputs, perform reasoning, and follow complex instructions \cite{wu2023bloomberggpt, yang2023fingpt}.
+The most recent stage in the evolution of financial sentiment analysis is the emergence of generative AI and decoder-only large language models (LLMs), such as GPT-4, BloombergGPT, and FinGPT. Unlike discriminative models that map text to predefined labels, generative LLMs can produce free-form outputs, perform reasoning, and follow complex instructions \cite{wu2023bloomberggpt, yang2023fingpt}.
 
 While proprietary models such as BloombergGPT are trained on extensive internal financial datasets, open-source frameworks such as FinGPT~\cite{yang2023fingpt} have expanded accessibility through parameter-efficient fine-tuning techniques, including Low-Rank Adaptation (LoRA~\cite{hu2022lora}). These methods enable large pre-trained LLMs (e.g.\ LLaMA-based architectures) to be adapted to financial tasks using comparatively modest computational resources.
 
@@ -322,11 +320,11 @@ Empirical studies demonstrate that FinBERT consistently achieves state-of-the-ar
 
 \subsubsection{Generative Models: The Decoder-Only Paradigm (FinGPT)}
 
-The recent paradigm shift toward Generative Artificial Intelligence is driven by decoder-only Transformer architectures (e.g.\ GPT-3, LLaMA), trained using an autoregressive next-token prediction objective. Unlike discriminative models, generative Large Language Models (LLMs) exhibit emergent capabilities such as few-shot learning and instruction following, enabling them to perform a wide range of tasks without extensive task-specific fine-tuning \cite{wu2023bloomberggpt, yang2023fingpt}.
+The recent paradigm shift toward generative AI is driven by decoder-only Transformer architectures (e.g.\ GPT-3, LLaMA), trained using an autoregressive next-token prediction objective. Unlike discriminative models, generative large language models (LLMs) exhibit emergent capabilities such as few-shot learning and instruction following, enabling them to perform a wide range of tasks without extensive task-specific fine-tuning \cite{wu2023bloomberggpt, yang2023fingpt}.
 
 BloombergGPT \cite{wu2023bloomberggpt} represents the first large-scale application of this paradigm to the financial domain, comprising a 50-billion-parameter model trained on a mixed corpus of approximately 363 billion financial tokens and 345 billion general-domain tokens. While BloombergGPT demonstrated that combining domain-specific and general knowledge yields strong performance across financial NLP tasks, its proprietary nature and extreme computational requirements---estimated at over one million GPU hours---render it inaccessible for most academic research.
 
-These constraints motivated the development of FinGPT~\cite{yang2023fingpt}, an open-source framework designed to democratise access to financial LLMs. FinGPT adopts a data-centric methodology and leverages parameter-efficient fine-tuning techniques such as Low-Rank Adaptation (LoRA~\cite{hu2022lora}). By freezing the majority of pre-trained model weights and introducing trainable low-rank matrices, FinGPT reduces the number of trainable parameters from billions to millions, significantly lowering computational cost while preserving model expressiveness.
+These constraints motivated the development of FinGPT~\cite{yang2023fingpt}, an open-source framework designed to democratise access to financial LLMs. Subsequent extensions of this framework have explored instruction-tuning benchmarks~\cite{wang2023fingptbenchmark} and dissemination-aware prompting for improved stock-movement prediction~\cite{liang2025fingpt}. FinGPT adopts a data-centric methodology and leverages parameter-efficient fine-tuning techniques such as Low-Rank Adaptation (LoRA~\cite{hu2022lora}). By freezing the majority of pre-trained model weights and introducing trainable low-rank matrices, FinGPT reduces the number of trainable parameters from billions to millions, significantly lowering computational cost while preserving model expressiveness.
 
 Crucially, generative models such as FinGPT differ from FinBERT in their contextual understanding and numerical sensitivity. Through instruction tuning, sentiment analysis is reframed from a fixed classification task into a generative reasoning task (e.g.\ \emph{``Determine the sentiment of the following news article''}). This formulation allows the model to integrate broader contextual knowledge and infer sentiment from implicit cues, particularly in complex narratives involving numerical changes, expectations, or macroeconomic implications \cite{yang2023fingpt}.
 
@@ -354,31 +352,31 @@ Empirical studies consistently demonstrate the superiority of LSTM networks over
 
 Gated Recurrent Units, introduced by \citet{chung2014empirical}, offer a simplified alternative to the LSTM gating mechanism. Rather than maintaining separate input, forget, and output gates alongside a distinct memory cell, the GRU consolidates this logic into two gates: a \emph{reset gate}, which controls how much of the previous hidden state is retained when computing the candidate state, and an \emph{update gate}, which interpolates between the previous hidden state and the candidate. This simpler parameterisation reduces the number of trainable weights per layer, which is advantageous in data-constrained settings where the risk of overfitting is high.
 
-Empirical comparisons between LSTM and GRU on financial time-series tasks report mixed conclusions. \citet{siami2019performance} found GRU to be competitive with LSTM on standard stock prediction benchmarks while converging faster, suggesting it is preferable when training data is limited. In the present thesis, both architectures are evaluated in parallel under identical conditions, allowing a direct assessment of whether the additional capacity of the LSTM translates into better directional forecasting for Bursa Malaysia stocks.
+Empirical comparisons between LSTM and GRU on financial time-series tasks report mixed conclusions. \citet{siami2019performance} found GRU to be competitive with LSTM on standard stock prediction benchmarks while converging faster, a finding corroborated by multi-sector comparisons in which GRU and LSTM perform comparably to each other but both substantially outperform ARIMA on daily equity data~\cite{yavasani2023comparative}. In the present thesis, both architectures are evaluated in parallel under identical conditions, allowing a direct assessment of whether the additional capacity of the LSTM translates into better directional forecasting for Bursa Malaysia stocks.
 
 \subsubsection{The Hybrid Approach: FinBERT--LSTM}
 
 A key limitation of applying LSTM models exclusively to price-based data (e.g.\ OHLCV) is the exclusion of qualitative market drivers. To overcome this limitation, recent studies have proposed hybrid architectures that integrate structured numerical features with unstructured sentiment information extracted using Natural Language Processing (NLP) models. This approach is theoretically motivated by the observation that while historical prices capture underlying trends, news sentiment reflects market shocks, investor psychology, and exogenous events that often trigger trend reversals.
 
-The FinBERT--LSTM pipeline represents a prominent hybrid architecture in this domain. Within this framework, FinBERT acts as a feature extractor, transforming financial text into sentiment representations (e.g.\ classification probabilities or embedding vectors). These sentiment features are then incorporated as auxiliary inputs to the LSTM network alongside traditional technical indicators. \citet{halder2024finbert} reported that a FinBERT--LSTM configuration outperformed standalone LSTM and MLP baselines on NASDAQ-100 forecasting, illustrating how Transformer-derived sentiment features can enhance recurrent price models.
+The FinBERT--LSTM pipeline represents a prominent hybrid architecture in this domain. Within this framework, FinBERT acts as a feature extractor, transforming financial text into sentiment representations (e.g.\ classification probabilities or embedding vectors). These sentiment features are then incorporated as auxiliary inputs to the LSTM network alongside traditional technical indicators. Multiple empirical studies confirm the superiority of this hybrid design: \citet{halder2024finbert} reported that a FinBERT--LSTM configuration outperformed standalone LSTM and MLP baselines on NASDAQ-100 forecasting; \citet{gu2024predicting} showed that FinBERT-derived weighted news sentiment significantly reduced MAE and MAPE on NASDAQ-100 indices; and \citet{kim2023forecasting} demonstrated that including FinBERT sentiment scores improved LSTM prediction accuracy on S\&P~500 data across MSE, RMSE, and MAE measures. Beyond recurrent models, \citet{liu2023stock} applied FinBERT to social-media investor sentiment and found that it raised the F1-score for stock movement prediction by 4--5 percentage points over non-financial sentiment analysers.
 
-Further extending this approach, \citet{soliman2025improving} compared LSTM-based architectures with probabilistic forecasting models such as DeepAR. While probabilistic models provided advantages in uncertainty quantification, the integration of FinBERT-derived sentiment features consistently reduced forecasting errors, including RMSE and MAPE, across both deterministic and probabilistic frameworks.
+Further extending this approach, \citet{soliman2025improving} compared LSTM-based architectures with probabilistic forecasting models such as DeepAR, while \citet{zeng2025finbert} found that FinBERT-augmented LSTM outperformed both standalone ARIMA and non-sentiment LSTM baselines for stock movement prediction. Across these studies, the integration of FinBERT-derived sentiment features consistently reduces forecasting errors and improves directional accuracy, regardless of the underlying recurrent architecture.
 
 
 
 \subsection{Synthesis and Research Gap}
 
-The reviewed literature reveals an increasingly sophisticated financial forecasting landscape in which Deep Learning models and Large Language Models (LLMs) are converging. Despite these methodological advances, several critical research gaps remain, particularly in the context of emerging markets such as Malaysia.
+The reviewed literature reveals an increasingly sophisticated financial forecasting landscape in which deep learning models and large language models (LLMs) are converging. Despite these methodological advances, several critical research gaps remain, particularly in the context of emerging markets such as Malaysia.
 
 \subsubsection{The Geographic Gap: Under-representation of the KLSE}
 
-The majority of advanced sentiment analysis and financial forecasting research focuses on developed markets, most notably the United States (NASDAQ, NYSE) and China. In contrast, rigorous applications of Transformer-based LLMs to the Bursa Malaysia (KLSE) remain scarce. While recent local studies have explored machine learning approaches for KLSE prediction~\cite{leong2021stock}, they often rely on legacy lexicon-based sentiment techniques (e.g.\ VADER, Loughran--McDonald) or conventional classifiers such as Na\"ive Bayes and SVM. 
+The majority of advanced sentiment analysis and financial forecasting research focuses on developed markets, most notably the United States (NASDAQ, NYSE) and China. In contrast, rigorous applications of Transformer-based LLMs to the Bursa Malaysia (KLSE) remain scarce. While recent local studies have explored machine learning approaches for KLSE prediction~\cite{leong2021stock, tengku2022prediction, ku2023improving}, they often rely on price-history features, legacy lexicon-based sentiment techniques (e.g.\ VADER, Loughran--McDonald), or conventional classifiers such as Na\"ive Bayes and SVM rather than modern Transformer-based language models.
 
-Although \citet{tan2025klse} introduced localised sentiment data sourced from platforms such as \emph{KLSE Screener}, their analysis focused primarily on ensemble tree-based models (e.g.\ XGBoost) rather than evaluating the semantic reasoning capabilities of modern Generative AI models. This thesis directly addresses this gap by applying advanced FinBERT and FinGPT architectures to the Malaysian market, with particular emphasis on their ability to capture local political and economic narratives that are often absent from global datasets.
+Although \citet{tan2025klse} introduced localised sentiment data sourced from platforms such as \emph{KLSE Screener}, their analysis focused primarily on ensemble tree-based models (e.g.\ XGBoost) rather than evaluating the semantic reasoning capabilities of modern generative AI models. This thesis directly addresses this gap by applying advanced FinBERT and FinGPT architectures to the Malaysian market, with particular emphasis on their ability to capture local political and economic narratives that are often absent from global datasets.
 
 \subsubsection{The Signal Dilution Problem}
 
-A related but distinct methodological gap concerns the construction of the news corpus itself. Prior work that aggregates all available financial news into a single daily sentiment index implicitly assumes that the aggregate signal is informative about any given stock. In practice, a broad corpus pooling macroeconomic, political, and multi-sector news introduces substantial noise relative to the target return series---a phenomenon referred to in the event-study literature as \emph{signal dilution}. \citet{tetlock2007giving} demonstrated that market-wide media pessimism predicts downward pressure on aggregate indices, but firm-level predictability is substantially weaker when the underlying text is not filtered to the target company. More recent work on firm-specific sentiment confirms that relevance filtering---restricting the corpus to articles that explicitly mention the firm of interest---is a precondition for observing significant news--return associations at the stock level~\cite{tetlock2008words}. This thesis directly tests the signal dilution hypothesis by contrasting broad-corpus aggregation against company-filtered sentiment for the same four Bursa Malaysia stocks, providing a clean empirical quantification of the filtering effect in the Malaysian market.
+A related but distinct methodological gap concerns the construction of the news corpus itself. Prior work that aggregates all available financial news into a single daily sentiment index implicitly assumes that the aggregate signal is informative about any given stock. In practice, a broad corpus pooling macroeconomic, political, and multi-sector news introduces substantial noise relative to the target return series---a phenomenon referred to in the event-study literature as \emph{signal dilution}. \citet{tetlock2007giving} demonstrated that market-wide media pessimism predicts downward pressure on aggregate indices, but firm-level predictability is substantially weaker when the underlying text is not filtered to the target company. More recent work on firm-specific sentiment confirms that relevance filtering---restricting the corpus to articles that explicitly mention the firm of interest---is a precondition for observing significant news--return associations at the stock level~\cite{tetlock2008words, cristescu2023analyzing}. This thesis directly tests the signal dilution hypothesis by contrasting broad-corpus aggregation against company-filtered sentiment for the same four Bursa Malaysia stocks, providing a clean empirical quantification of the filtering effect in the Malaysian market.
 
 \subsubsection{The Methodological Gap: Discriminative vs.\ Generative Models for Forecasting}
 
@@ -386,7 +384,7 @@ A further under-explored area in the literature is the direct performance compar
 
 \subsubsection{Conclusion}
 
-Existing research increasingly suggests that hybrid models combining sentiment analysis with time-series forecasting (e.g.\ LLM + LSTM) can outperform unimodal approaches based solely on price data, although the size and stability of the gain remain highly dataset-dependent \cite{ding2015deep, halder2024finbert, soliman2025improving}. However, the application of Generative Financial LLMs such as FinGPT to the unique microstructure of the Malaysian stock market remains largely unexplored. This thesis aims to bridge this gap by empirically evaluating whether the generative reasoning capabilities of FinGPT yield a statistically significant improvement over the static sentiment classification provided by FinBERT in modelling KLSE stock movement. In doing so, this work contributes a novel empirical perspective to the broader discourse on the role of Generative AI in financial market prediction.
+Existing research increasingly suggests that hybrid models combining sentiment analysis with time-series forecasting (e.g.\ LLM + LSTM) can outperform unimodal approaches based solely on price data, although the size and stability of the gain remain highly dataset-dependent \cite{ding2015deep, halder2024finbert, soliman2025improving}. However, the application of generative financial LLMs such as FinGPT to the unique microstructure of the Malaysian stock market remains largely unexplored. This thesis aims to bridge this gap by empirically evaluating whether the generative reasoning capabilities of FinGPT yield a statistically significant improvement over the static sentiment classification provided by FinBERT in modelling KLSE stock movement. In doing so, this work contributes a novel empirical perspective to the broader discourse on the role of generative AI in financial market prediction.
 
 
 \section{Method Development}
@@ -401,10 +399,10 @@ A fundamental methodological distinction in this research is the treatment of in
 In the context of Experiment~1 (Sentiment Benchmarking), financial news headlines are treated as static, cross-sectional data. Although natural language is inherently sequential at the syntactic level, the sentiment extraction process treats each headline as an independent observation occurring at a discrete point in time~$t$, without requiring temporal dependence on observations at $t-1$ for classification.
 
 \begin{itemize}
-    \item \textbf{Vectorisation and Embedding:}  
+    \item \textbf{Vectorisation and Embedding:}
     Raw textual data is unstructured and must be transformed into a numerical representation to be processed by discriminative models such as FinBERT. This is achieved through Transformer-based embedding, where the input token sequence is mapped to contextualised representations. The final hidden state of the special \texttt{[CLS]} token serves as a static, high-dimensional vector summarising the sentiment of the entire headline.
 
-    \item \textbf{Dimensionality Reduction:}  
+    \item \textbf{Dimensionality Reduction:}
     Unlike traditional bag-of-words approaches that produce sparse and high-dimensional frequency vectors, Transformer models compress semantic information into dense embeddings. For integration into the downstream forecasting model, this representation is further reduced to a scalar sentiment score or a probability distribution over sentiment classes (Positive, Negative, Neutral). This output constitutes a static sentiment feature associated with a specific trading day, denoted as $S_t$.
 \end{itemize}
 
@@ -413,12 +411,12 @@ In the context of Experiment~1 (Sentiment Benchmarking), financial news headline
 In contrast, the stock market data used in Experiments~2 and~3---comprising Open, High, Low, Close, and Volume (OHLCV)---is dynamic and longitudinal in nature. The temporal ordering of observations is essential; financial time-series data is not independent and identically distributed (i.i.d.), but instead exhibits serial dependence, where the state at time~$t$ is a function of prior states $t-1, t-2, \dots, t-n$.
 
 \begin{itemize}
-    \item \textbf{Sequential Dependencies:}  
+    \item \textbf{Sequential Dependencies:}
     Financial econometrics assumes that historical price movements and trading volumes encode latent structures such as momentum, volatility clustering, and mean reversion. Capturing these dynamics requires representations that preserve chronological ordering, allowing the model to learn state evolution over time.
 
-    \item \textbf{Sliding Window Approach:}  
+    \item \textbf{Sliding Window Approach:}
     To convert dynamic financial data into a supervised learning format suitable for Long Short-Term Memory (LSTM) networks, this study employs a sliding (rolling) window methodology. The resulting input data is structured as a three-dimensional tensor of shape $(\text{Samples}, \text{Time Steps}, \text{Features})$.
-    
+
     For a window size $w$ (e.g.\ $w=10$ trading days, as used in Experiment~3), the input vector at time~$t$ is defined as a sequence:
     \[
         \mathbf{X}_t = \{ \mathbf{x}_{t-w}, \mathbf{x}_{t-w+1}, \dots, \mathbf{x}_{t} \}.
@@ -431,10 +429,10 @@ In contrast, the stock market data used in Experiments~2 and~3---comprising Open
 The key methodological contribution of this thesis lies in the integration of static textual sentiment with dynamic financial time-series data. The static sentiment scores $S_t$ generated by FinBERT or FinGPT are fused with the dynamic market variables $P_t$ to form an enriched, multimodal dataset.
 
 \begin{itemize}
-    \item \textbf{Temporal Alignment:}  
+    \item \textbf{Temporal Alignment:}
     Financial news arrives irregularly, whereas stock prices are observed at regular daily intervals. To reconcile this mismatch, sentiment signals are aggregated (e.g.\ via averaging or weighted aggregation) to align with the daily frequency of market data.
 
-    \item \textbf{Augmented Input Vector:}  
+    \item \textbf{Augmented Input Vector:}
     The final input to the predictive model is a dynamic sequence in which each time step contains both numerical market indicators and the corresponding static sentiment feature derived from that day's news:
     \[
         \mathbf{X}_t =
@@ -456,10 +454,10 @@ This research employs two distinct supervised learning paradigms to benchmark th
 FinBERT is based on a Transformer encoder architecture. Its adaptation to the Malaysian financial domain is achieved through \emph{transfer learning}, whereby knowledge learned from a source domain (large-scale financial corpora such as TRC2-financial) is transferred to a target domain consisting of Malaysian financial news.
 
 \begin{itemize}
-    \item \textbf{Mechanism:}  
+    \item \textbf{Mechanism:}
     The input text is tokenised and passed through the BERT encoder. The final hidden representation of the special classification token \texttt{[CLS]} is used as an aggregate semantic embedding of the entire input sequence. A task-specific dense output layer, implemented as a linear projection followed by a Softmax activation, is added on top of the \texttt{[CLS]} representation to produce a probability distribution over sentiment classes (Positive, Negative, Neutral).
 
-    \item \textbf{Optimisation:}  
+    \item \textbf{Optimisation:}
     During fine-tuning, model parameters are updated by minimising the categorical Cross-Entropy Loss between the predicted class probabilities and the ground truth sentiment labels from the annotated dataset. To mitigate \emph{catastrophic forgetting}---where pre-trained linguistic knowledge is overwritten during task adaptation---this study adopts discriminative fine-tuning. In this scheme, lower encoder layers (which capture general syntactic and semantic features) are assigned smaller learning rates, while higher layers (which encode task-specific information) are updated more aggressively.
 \end{itemize}
 
@@ -468,7 +466,7 @@ FinBERT is based on a Transformer encoder architecture. Its adaptation to the Ma
 In contrast to FinBERT, FinGPT-style models are built upon decoder-only Transformer architectures and are designed for autoregressive text generation. In this thesis, the generative family is instantiated with multiple open backbones, including TinyLlama, Qwen, and Llama instruct models, and adapted to sentiment classification through \emph{instruction tuning}.
 
 \begin{itemize}
-    \item \textbf{Task Transformation:}  
+    \item \textbf{Task Transformation:}
     Rather than projecting a fixed-length embedding to a sentiment label, FinGPT reformulates sentiment analysis as a text generation task. The dataset is converted into instruction--response pairs of the form:
     \[
         \text{Human: [Instruction] + [Input]} \;\rightarrow\;
@@ -476,7 +474,7 @@ In contrast to FinBERT, FinGPT-style models are built upon decoder-only Transfor
     \]
     This formulation allows the model to leverage its generative reasoning capabilities to infer sentiment from context, rather than relying solely on pattern-based classification.
 
-    \item \textbf{Low-Rank Adaptation (LoRA):}  
+    \item \textbf{Low-Rank Adaptation (LoRA):}
     Fine-tuning a multi-billion-parameter LLM directly is computationally prohibitive. To address this challenge, FinGPT employs Low-Rank Adaptation (LoRA~\cite{hu2022lora}), which freezes the pre-trained model weights and injects trainable low-rank decomposition matrices into selected Transformer layers. This approach drastically reduces the number of trainable parameters (for example, from billions to a few million), enabling efficient adaptation to the linguistic and contextual nuances of the Malaysian financial market without the cost of full-model retraining. Additionally, instruction tuning combined with LoRA improves numerical sensitivity by explicitly training the model to interpret financial quantities within the semantic context of the prompt.
 \end{itemize}
 
@@ -490,10 +488,10 @@ For the generative component of this study (FinGPT), the methodological focus sh
 This research evaluates two complementary generative settings in order to assess baseline generalisation and domain adaptation in the Malaysian market context:
 
 \begin{itemize}
-    \item \textbf{Zero-Shot Learning:}  
+    \item \textbf{Zero-Shot Learning:}
     In the zero-shot setting, the model is provided only with a task description and a financial news headline, without any labelled examples. The prompt relies entirely on the model's pre-trained knowledge to infer sentiment (e.g.\ \emph{``Return only one label: positive, neutral, or negative''}). This configuration evaluates the model's intrinsic understanding of financial concepts and contextual sentiment.
 
-    \item \textbf{Supervised Instruction Tuning with LoRA:}  
+    \item \textbf{Supervised Instruction Tuning with LoRA:}
     To capture linguistic, political, and economic nuances specific to Bursa Malaysia, selected generative backbones are further adapted on a supervised headline sentiment corpus using instruction--response pairs and Low-Rank Adaptation (LoRA). This stage evaluates whether gradient-based domain adaptation yields a meaningful improvement over zero-shot prompting alone.
 \end{itemize}
 
@@ -517,13 +515,13 @@ To ensure rigorous and meaningful benchmarking, distinct evaluation metrics are 
 Standard accuracy is often insufficient for financial sentiment analysis due to class imbalance, where neutral news items typically dominate the dataset. To address this limitation, this study employs the following metrics:
 
 \begin{itemize}
-    \item \textbf{F1-Score:}  
+    \item \textbf{F1-Score:}
     The harmonic mean of Precision and Recall, used as the primary evaluation metric for Experiment~1. The F1-score penalises models that achieve artificially high accuracy by predominantly predicting the majority (Neutral) class without detecting market-relevant sentiment shifts:
     \[
         \text{F1} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}.
     \]
 
-    \item \textbf{Precision and Recall:}  
+    \item \textbf{Precision and Recall:}
     These metrics are reported separately to diagnose whether a model fails to identify true sentiment signals (low Recall) or produces excessive false positives (low Precision).
 \end{itemize}
 
@@ -532,7 +530,7 @@ Standard accuracy is often insufficient for financial sentiment analysis due to 
 For the downstream task of predicting KLSE stock price movements in Experiments~2 and~3, model performance is evaluated using error metrics standard in financial econometrics:
 
 \begin{itemize}
-    \item \textbf{Root Mean Square Error (RMSE):}  
+    \item \textbf{Root Mean Square Error (RMSE):}
     RMSE penalises larger prediction errors more heavily than smaller ones, making it particularly suitable for financial forecasting where large deviations carry disproportionate risk:
     \[
         \text{RMSE} =
@@ -543,13 +541,13 @@ For the downstream task of predicting KLSE stock price movements in Experiments~
         }.
     \]
 
-    \item \textbf{Coefficient of Determination ($R^2$):}  
+    \item \textbf{Coefficient of Determination ($R^2$):}
     $R^2$ measures how much variance in the target series is explained by the model relative to a baseline predictor:
     \[
         R^2 = 1 - \frac{\sum_{i=1}^{n} (y_i - \hat{y}_i)^2}{\sum_{i=1}^{n} (y_i - \bar{y})^2}.
     \]
 
-    \item \textbf{Directional Accuracy:}  
+    \item \textbf{Directional Accuracy:}
     Because return magnitude is often noisy even when sign is informative, directional accuracy is also reported as the proportion of observations for which the predicted and realised return signs agree:
     \[
         \text{DA} = \frac{1}{n}\sum_{i=1}^{n}\mathbb{1}\big(\operatorname{sign}(\hat{y}_i)=\operatorname{sign}(y_i)\big).
@@ -560,7 +558,7 @@ For the downstream task of predicting KLSE stock price movements in Experiments~
 
 In addition to contemporaneous correlation metrics, Experiment~2 employs Granger causality tests to characterise the lead--lag relationship between sentiment and returns. A variable $X$ is said to \emph{Granger-cause} $Y$ if past values of $X$ contain statistically significant information about future values of $Y$ beyond what past values of $Y$ alone provide. Formally, this is tested by comparing a restricted autoregressive model of $Y$ against an unrestricted model that includes lagged values of $X$; the improvement in fit is evaluated via an $F$-test.
 
-Granger causality is widely used in financial econometrics to distinguish genuine predictive lead--lag channels from spurious contemporaneous correlation. \citet{bollen2011twitter} applied Granger causality to demonstrate that Twitter mood scores preceded DJIA movements, establishing the framework as standard practice in news-driven market studies. In the present thesis, Granger tests are applied at lag~1 in both directions (sentiment$\to$returns and returns$\to$sentiment) for each company-filtered stock, allowing the heterogeneous causal structures across stocks to be characterised and compared.
+Granger causality is widely used in financial econometrics to distinguish genuine predictive lead--lag channels from spurious contemporaneous correlation. \citet{bollen2011twitter} applied Granger causality to demonstrate that Twitter mood scores preceded DJIA movements, establishing the framework as standard practice in news-driven market studies. More recently, \citet{farrell2025granger} applied static and time-varying Granger causality to assess whether investor sentiment indices predict equity index returns, finding that causality strength varies substantially across sample periods---underscoring the heterogeneity of causal channels this thesis also observes. In the present thesis, Granger tests are applied in both directions (sentiment$\to$returns and returns$\to$sentiment) across lags 1--5 for each company-filtered stock, allowing the heterogeneous causal structures across stocks to be characterised and compared.
 
 \paragraph{Validation Strategy: Chronological Hold-Out Split}
 
@@ -569,7 +567,7 @@ To respect the temporal structure of financial time-series data, this study repl
 
 \chapter{Sentiment Model Benchmarking}
 
-\chapterabstract{This chapter presents a comparative empirical study of FinBERT and FinGPT-style generative models to evaluate their efficacy in extracting financial sentiment within the Malaysian market context. In addition to TinyLlama-LoRA---a TinyLlama-1.1B model fine-tuned by the author using the FinGPT instruction-tuning framework---the benchmark is extended to larger open instruct models from the Qwen and Llama families in order to separate the effects of model architecture from backbone capacity. The chapter compares zero-shot prompting, supervised fine-tuning on a Malaysian financial headline corpus, and pseudo-label adaptation on recent unlabeled news. The findings identify FinBERT as the strongest supervised sentiment model for the subsequent forecasting experiments, while also showing that larger generative backbones substantially outperform the original TinyLlama baseline in zero-shot evaluation, whereas public-source FinGPT checkpoints and LoRA fine-tuning of the larger decoders do not surpass either the best zero-shot Llama baseline or FinBERT.}
+\chapterabstract{This chapter presents a comparative empirical study of FinBERT and FinGPT-style generative models to evaluate their efficacy in extracting financial sentiment within the Malaysian market context. In addition to TinyLlama-LoRA---a TinyLlama-1.1B model fine-tuned by the author using the FinGPT instruction-tuning framework---the benchmark is extended to larger open instruct models from the Qwen and Llama families in order to separate the effects of model architecture from backbone capacity. The chapter compares zero-shot prompting, supervised fine-tuning on a Malaysian financial headline corpus, and pseudo-label adaptation on recent unlabelled news. The findings identify FinBERT as the strongest supervised sentiment model for the subsequent forecasting experiments, while also showing that larger generative backbones substantially outperform the original TinyLlama baseline in zero-shot evaluation, whereas public-source FinGPT checkpoints and LoRA fine-tuning of the larger decoders do not surpass either the best zero-shot Llama baseline or FinBERT.}
 
 \section{Introduction}
 This chapter evaluates how well domain-specific and open generative language models transfer to Malaysian financial news sentiment classification. The main comparison is between a discriminative encoder-only model, FinBERT, and a set of decoder-only FinGPT-style models that predict sentiment through prompted generation. The motivation is twofold: first, to identify the strongest sentiment model for downstream forecasting; second, to test whether the additional flexibility of generative models yields a practical advantage in an emerging market setting characterised by local political language, corporate reporting conventions, and a strong neutral-class imbalance.
@@ -577,7 +575,7 @@ This chapter evaluates how well domain-specific and open generative language mod
 \section{Background Literature}
 Encoder-only transformers remain strong baselines for sentence-level financial sentiment classification. FinBERT adapted BERT to financial text and showed that domain-specialised pre-training materially improves sentiment classification over generic language models~\cite{araci2019finbert, yang2020finbert}. In settings where the downstream task is short-text polarity classification rather than long-form generation, bidirectional encoders retain an architectural advantage because they are directly optimised for discriminative supervision. This makes FinBERT a natural benchmark for the present chapter.
 
-Decoder-only LLMs offer a different set of strengths. Parameter-efficient fine-tuning methods such as LoRA~\cite{hu2022lora} drastically reduce the memory and compute cost of adapting large generative models, while finance-specific open-source workflows such as FinGPT~\cite{yang2023fingpt} show how these methods can be applied to domain adaptation under realistic academic resource constraints. Recent comparative studies likewise show that stronger or newer models do not automatically dominate specialised baselines once they are fine-tuned and evaluated carefully on financial sentiment tasks \cite{shobayo2024innovative, nasiopoulos2025financial}. These developments motivate testing generative backbones in this thesis, but they do not guarantee that a generative architecture will outperform a specialised encoder on a small supervised sentiment benchmark.
+Decoder-only LLMs offer a different set of strengths. Parameter-efficient fine-tuning methods such as LoRA~\cite{hu2022lora} drastically reduce the memory and compute cost of adapting large generative models, while finance-specific open-source workflows such as FinGPT~\cite{yang2023fingpt} and instruction-tuned variants such as Instruct-FinGPT~\cite{zhang2023instructfingpt} show how these methods can be applied to domain adaptation under realistic academic resource constraints. Recent comparative studies of fine-tuned LLMs on financial sentiment benchmarks---including FinancialPhraseBank and domain-specific corpora---show that stronger or newer backbones do not automatically dominate specialised baselines once evaluated carefully \cite{shobayo2024innovative, nasiopoulos2025financial, mo2024finetuning}. These developments motivate testing generative backbones in this thesis, but they do not guarantee that a generative architecture will outperform a specialised encoder on a small supervised sentiment benchmark.
 
 The transfer question is especially important in low-resource scenarios. Surveys of low-resource NLP emphasise that gains from pre-training and transfer learning become much less predictable when labelled data are sparse, domain shift is large, or the target language/domain combination is underrepresented in pre-training corpora~\cite{hedderich2021survey}. Malaysian financial news combines all three challenges: limited annotated data, local political-economic vocabulary, and a market context that differs materially from the US-centric corpora on which most financial NLP models are evaluated. The benchmark in this chapter therefore tests not only model capacity, but also the robustness of transfer to an emerging-market financial setting.
 
@@ -585,12 +583,12 @@ The transfer question is especially important in low-resource scenarios. Surveys
 Three data resources were used in the sentiment benchmark.
 
 \begin{itemize}
-    \item A supervised headline sentiment corpus of approximately 60,000 labeled financial news headlines, sourced from Kaggle, was used for primary supervised fine-tuning.
+    \item A supervised headline sentiment corpus of approximately 60,000 labelled financial news headlines, sourced from Kaggle, was used for primary supervised fine-tuning.
     \item A manually annotated Malaysian benchmark set of 100 news items from 2025 was used as the development set for model comparison and selection.
     \item A second manually annotated Malaysian benchmark set of 200 news items from 2026 was reserved as a held-out final test set for the selected downstream model.
 \end{itemize}
 
-In addition, a recent Malaysian news corpus covering 2023--2025, with the manually labeled 2025 items excluded, was used for pseudo-label adaptation experiments. This excluded-human corpus contained 92,294 rows after preprocessing.
+In addition, a recent Malaysian news corpus covering 2023--2025, with the manually labelled 2025 items excluded, was used for pseudo-label adaptation experiments. This excluded-human corpus contained 92,294 rows after preprocessing.
 
 For the generative fine-tuning experiments, TinyLlama-1.1B was selected as the base backbone and adapted using the FinGPT instruction-tuning methodology: the 60k headline corpus was reformatted into instruction--response pairs and the model was fine-tuned with LoRA. This adapted model---referred to throughout as \textbf{TinyLlama-LoRA} to distinguish it from both the unmodified TinyLlama zero-shot baseline and the separately downloaded public FinGPT checkpoint---represents the author's own training run rather than a publicly released model.
 
@@ -598,12 +596,12 @@ For the generative fine-tuning experiments, TinyLlama-1.1B was selected as the b
 The benchmark was structured in three stages.
 
 \begin{enumerate}
-    \item \textbf{Zero-shot evaluation.} FinBERT and several open instruct LLM backbones were evaluated directly on the 2025 human-labeled benchmark without task-specific gradient updates.
-    \item \textbf{Supervised fine-tuning.} FinBERT and selected generative backbones were adapted on the 60k labeled headline corpus using discriminative fine-tuning for FinBERT and LoRA-based instruction tuning for generative models.
-    \item \textbf{Pseudo-label adaptation.} The best 60k-trained FinBERT and TinyLlama-LoRA models were used to pseudo-label the 2023--2025 excluded-human corpus, after which each model was adapted on its own pseudo-labeled recent data and reevaluated on the 2025 development benchmark.
+    \item \textbf{Zero-shot evaluation.} FinBERT and several open instruct LLM backbones were evaluated directly on the 2025 human-labelled benchmark without task-specific gradient updates.
+    \item \textbf{Supervised fine-tuning.} FinBERT and selected generative backbones were adapted on the 60k labelled headline corpus using discriminative fine-tuning for FinBERT and LoRA-based instruction tuning for generative models.
+    \item \textbf{Pseudo-label adaptation.} The best 60k-trained FinBERT and TinyLlama-LoRA models were used to pseudo-label the 2023--2025 excluded-human corpus, after which each model was adapted on its own pseudo-labelled recent data and reevaluated on the 2025 development benchmark.
 \end{enumerate}
 
-Macro F1-score was treated as the primary metric because the Malaysian news benchmark is class-imbalanced and raw accuracy can be inflated by overpredicting the neutral class. Accuracy, macro precision, macro recall, weighted precision, weighted recall, and weighted F1-score were also recorded for diagnostic analysis.
+Macro F1 was treated as the primary metric because the Malaysian news benchmark is class-imbalanced and raw accuracy can be inflated by overpredicting the neutral class. Accuracy, macro precision, macro recall, weighted precision, weighted recall, and weighted F1 were also recorded for diagnostic analysis.
 
 \section{Results}
 
@@ -644,7 +642,7 @@ Zero-shot baseline & ProsusAI/FinBERT & 0.25 & 0.250 \\
 Pseudo-label adapted & FinBERT adapted & 0.66 & 0.546 \\
 \hline
 \end{tabular}
-\caption{Main FinBERT-family results on the 2025 human-labeled development set. Macro F1-score is the primary model-selection metric.}
+\caption{Main FinBERT-family results on the 2025 human-labelled development set. Macro F1 is the primary model-selection metric.}
 \label{tab:finbert-family-2025}
 \end{table}
 
@@ -676,7 +674,7 @@ Llama-8B + LoRA (1ep, lr=1e-5) & Meta-Llama-3.1-8B-Instruct + LoRA & 0.44 & 0.43
 Llama-8B + LoRA (3ep, lr=2e-6) & Meta-Llama-3.1-8B-Instruct + LoRA & 0.42 & 0.418 \\
 \hline
 \end{tabular}
-\caption{Main FinGPT/LLM comparison on the 2025 human-labeled development set.}
+\caption{Main FinGPT/LLM comparison on the 2025 human-labelled development set.}
 \label{tab:fingpt-family-2025}
 \end{table}
 
@@ -687,7 +685,7 @@ Table~\ref{tab:fingpt-family-2025} tells a different story for the generative si
 The broader exploratory sweep was still useful, but it is not central to the thesis narrative. Among those supplementary runs, Qwen2.5-7B-Instruct was the second-best zero-shot open LLM at macro F1 0.410, while both Qwen-7B LoRA runs remained below that baseline. The public FinGPT Llama2-13B sentiment adapter also collapsed to near-majority-class behaviour with macro F1 0.133. These additional runs reinforce the main conclusion rather than changing it: larger decoder models improve zero-shot performance, but generative LoRA tuning does not overtake FinBERT in this task.
 
 \section{Summary}
-This chapter establishes four focused findings. First, the supervised FinBERT run2 model is the strongest sentiment model in the current Malaysian benchmark and therefore the most appropriate core signal for downstream forecasting. Second, the official public FinGPT baseline is weak in this setting, and the TinyLlama-LoRA model (the author's own fine-tuned TinyLlama-1.1B) improves on it but still remains far below FinBERT. Third, Meta-Llama-3.1-8B is the strongest modern open generative baseline tested in the main comparison, but even it does not match FinBERT, and LoRA fine-tuning consistently degraded performance across all configurations tested (1 epoch at lr=1e-5: macro F1 0.431; 3 epochs at lr=2e-6: macro F1 0.418), confirming that the issue is structural rather than a hyperparameter sensitivity. Fourth, pseudo-label adaptation on recent unlabeled news does not improve performance in this study. The remainder of the thesis therefore treats the 60k-supervised FinBERT model as the primary sentiment extractor, while the generative models serve mainly as comparative evidence on the trade-off between architectural flexibility and classification reliability.
+This chapter establishes four focused findings. First, the supervised FinBERT run2 model is the strongest sentiment model in the current Malaysian benchmark and therefore the most appropriate core signal for downstream forecasting. Second, the official public FinGPT baseline is weak in this setting, and the TinyLlama-LoRA model (the author's own fine-tuned TinyLlama-1.1B) improves on it but still remains far below FinBERT. Third, Meta-Llama-3.1-8B is the strongest modern open generative baseline tested in the main comparison, but even it does not match FinBERT, and LoRA fine-tuning consistently degraded performance across all configurations tested (1 epoch at lr=1e-5: macro F1 0.431; 3 epochs at lr=2e-6: macro F1 0.418), confirming that the issue is structural rather than a hyperparameter sensitivity. Fourth, pseudo-label adaptation on recent unlabelled news does not improve performance in this study. The remainder of the thesis therefore treats the 60k-supervised FinBERT model as the primary sentiment extractor, while the generative models serve mainly as comparative evidence on the trade-off between architectural flexibility and classification reliability.
 
 
 
@@ -701,11 +699,11 @@ Chapter~3 identified FinBERT run2 as the strongest sentiment extractor, but clas
 
 The experiment was conducted in two stages. First, the full 2023--2025 excluded-human news corpus was treated as a broad market-wide sentiment source and compared with the KLSE index and selected large-cap stocks. Second, the same corpus was filtered into company-specific subsets so that only articles mentioning a given firm contributed to that firm's daily sentiment signal. This design directly tests the hypothesis that weak broad-corpus results may be driven by signal dilution rather than by poor sentiment classification.
 \section{Background Literature}
-Prior literature on news-driven market prediction suggests that article relevance is a critical determinant of downstream performance. Broad market indices aggregate heterogeneous macroeconomic, political, and sectoral shocks, so a single daily sentiment average may be too diffuse to track any one return series. Event-study and firm-specific sentiment research instead argues that stock-level relationships are strongest when the underlying text is closely tied to the company being evaluated \cite{tetlock2007giving, tetlock2008words, davidovic2025news}.
+Prior literature on news-driven market prediction suggests that article relevance is a critical determinant of downstream performance. Broad market indices aggregate heterogeneous macroeconomic, political, and sectoral shocks, so a single daily sentiment average may be too diffuse to track any one return series. Event-study and firm-specific sentiment research instead argues that stock-level relationships are strongest when the underlying text is closely tied to the company being evaluated \cite{tetlock2007giving, tetlock2008words, bollen2011twitter, cristescu2023analyzing, davidovic2025news}.
 
 This distinction is especially important in the Malaysian setting. Local reporting frequently mixes firm-level announcements with broader political and macroeconomic commentary, and many corporate headlines are neutral or only weakly directional \cite{cheng2019malaysian, tan2025klse}. A model may therefore classify sentiment correctly at the headline level while still generating a weak downstream signal if irrelevant articles are pooled together. Experiment~2 is designed to test exactly this issue by contrasting broad aggregation with company-filtered aggregation.
 \section{Data Set}
-The primary sentiment source for this chapter was the excluded-human Malaysian news corpus covering 2023--2025, which contained 92,294 preprocessed rows after the manually labeled benchmark items were removed. This corpus was first used directly as a broad market-wide source for daily sentiment aggregation.
+The primary sentiment source for this chapter was the excluded-human Malaysian news corpus covering 2023--2025, which contained 92,294 preprocessed rows after the manually labelled benchmark items were removed. This corpus was first used directly as a broad market-wide source for daily sentiment aggregation.
 
 To test the effect of article relevance, the same corpus was then filtered into company-specific subsets using ticker and alias matching for leading Bursa Malaysia constituents. The largest filtered corpora used in the detailed analysis were 5,375 Maybank articles (1155.KL), 5,132 CIMB articles (1023.KL), 4,222 Tenaga articles (5347.KL), and 3,246 RHB articles (1066.KL). These sizes were large enough to support daily aggregation across the 2023--2025 period while remaining focused on a single firm.
 
@@ -743,7 +741,7 @@ Filtered ($n$=719) & 5347.KL (Tenaga) & $T$ & 0.337 & $1.5{\times}10^{-20}$ & 0.
 Filtered ($n$=710) & 1066.KL (RHB)    & $T$ & 0.066 & 0.081                 & 0.575 & 0.004 \\
 \hline
 \end{tabular}
-\caption{Broad-corpus KLSE versus company-filtered lag-0 results. All broad-corpus p-values exceed 0.30, confirming a null result. Filtered results for Maybank, CIMB, and Tenaga are highly significant ($p < 10^{-19}$).}
+\caption{Broad-corpus KLSE versus company-filtered lag-0 results. All broad-corpus p-values exceed 0.30, confirming a null result. Filtered results for Maybank, CIMB, and Tenaga are highly significant ($p < 10^{-18}$).}
 \label{tab:experiment2-filtered-summary}
 \end{table}
 
@@ -837,7 +835,7 @@ Second, company-specific filtering reveals highly significant same-day associati
 
 Third, the signal attenuates sharply beyond lag~0 for most stocks. For Maybank, Pearson correlation fell from 0.320 at $T$ to $-0.024$ at $T{+}1$ and effectively zero at $T{+}2$, with corresponding p-values rising to 0.509 and 0.965 respectively. This pattern is consistent with the semi-strong form of the Efficient Market Hypothesis (EMH), which predicts that publicly available news is rapidly incorporated into asset prices, leaving little exploitable predictive lead--lag relationship.
 
-Fourth, the Granger causality results reveal three distinct stock-level patterns. Tenaga shows the cleanest result: sentiment unidirectionally Granger-causes returns ($p = 0.014$) while the reverse direction is non-significant ($p = 0.253$), indicating that past FinBERT sentiment scores contain information about Tenaga's future returns beyond what past returns alone provide. Tenaga also shows a marginally significant T+2 Pearson correlation of 0.087 ($p = 0.019$), the only instance of forward-looking signal beyond lag~0 in the entire experiment. CIMB exhibits bidirectional Granger significance (sentiment$\to$returns $p = 0.008$, returns$\to$sentiment $p = 0.012$), which is harder to interpret causally and likely reflects a feedback loop between CIMB's corporate activity and press coverage. Maybank, despite its strong contemporaneous correlation, shows no Granger significance in either direction, confirming that its sentiment--return association is purely same-day. RHB shows only the reverse direction (returns$\to$sentiment, $p = 0.044$), suggesting that journalists are reporting on RHB's stock performance rather than driving it.
+Fourth, the Granger causality results reveal three distinct stock-level patterns. Tenaga shows the cleanest result: sentiment unidirectionally Granger-causes returns at lag~3 ($p = 0.014$) while the reverse direction is non-significant ($p = 0.253$), indicating that past FinBERT sentiment scores contain information about Tenaga's future returns beyond what past returns alone provide. Tenaga also shows a marginally significant T+2 Pearson correlation of 0.087 ($p = 0.019$), the only instance of forward-looking signal beyond lag~0 in the entire experiment. CIMB exhibits bidirectional Granger significance (sentiment$\to$returns $p = 0.008$, returns$\to$sentiment $p = 0.012$), which is harder to interpret causally and likely reflects a feedback loop between CIMB's corporate activity and press coverage. Maybank, despite its strong contemporaneous correlation, shows no Granger significance in either direction, confirming that its sentiment--return association is purely same-day. RHB shows only the reverse direction (returns$\to$sentiment, $p = 0.044$), suggesting that journalists are reporting on RHB's stock performance rather than driving it.
 
 Fifth, the weaker and largely non-significant RHB result is plausibly explained by its smaller filtered corpus (3,246 articles, mean 4.57 per day) relative to Maybank and CIMB (mean 7.01--7.34 per day), which reduces the daily sentiment signal-to-noise ratio. The 11--14\% of trading days without any matched articles across all four stocks also means the sentiment signal is absent on a non-trivial fraction of evaluation days.
 
@@ -845,9 +843,9 @@ Fifth, the weaker and largely non-significant RHB result is plausibly explained 
 
 This chapter assessed whether FinBERT-derived daily sentiment correlates with Bursa Malaysia market returns under broad and company-filtered conditions across 298--731 matched trading days.
 
-Five findings stand out. First, broad market-wide aggregation of the full 92,294-article corpus yields an entirely null result against the KLSE index (Pearson $= -0.008$, $p = 0.892$ at $T$), despite a mean of 115 articles per day; the null result is attributable to signal dilution rather than data sparsity. Second, company-specific filtering dramatically strengthens the same-day association for three of four stocks analysed: Maybank (Pearson $= 0.320$, $p < 10^{-18}$), CIMB ($r = 0.342$, $p < 10^{-20}$), and Tenaga ($r = 0.337$, $p < 10^{-19}$) all show highly significant contemporaneous correlations with OLS $R^2$ values of 0.103--0.117. Third, the signal is almost entirely contemporaneous: correlations at $T{+}1$ and $T{+}2$ are universally near zero and non-significant for most stocks, consistent with semi-strong EMH and rapid price incorporation of public news. Fourth, Granger causality tests reveal heterogeneous causal structures: Tenaga exhibits clean one-directional predictiveness (sentiment$\to$returns, $p = 0.014$), CIMB shows a bidirectional feedback loop, Maybank no Granger relationship despite strong contemporaneous signal, and RHB only the reverse (returns$\to$sentiment), suggesting journalists react to RHB's price rather than the reverse. Fifth, RHB is the weakest stock with no significant correlations, consistent with its smaller filtered corpus size (3,246 articles, mean 4.57 per day) introducing greater daily noise.
+Five findings stand out. First, broad market-wide aggregation of the full 92,294-article corpus yields an entirely null result against the KLSE index (Pearson $= -0.008$, $p = 0.892$ at $T$), despite a mean of 115 articles per day; the null result is attributable to signal dilution rather than data sparsity. Second, company-specific filtering dramatically strengthens the same-day association for three of four stocks analysed: Maybank (Pearson $= 0.320$, $p < 10^{-18}$), CIMB ($r = 0.342$, $p < 10^{-20}$), and Tenaga ($r = 0.337$, $p < 10^{-19}$) all show highly significant contemporaneous correlations with OLS $R^2$ values of 0.103--0.117. Third, the signal is almost entirely contemporaneous: correlations at $T{+}1$ and $T{+}2$ are universally near zero and non-significant for most stocks, consistent with semi-strong EMH and rapid price incorporation of public news. Fourth, Granger causality tests reveal heterogeneous causal structures: Tenaga exhibits clean one-directional predictiveness at lag~3 (sentiment$\to$returns, $p = 0.014$), CIMB shows a bidirectional feedback loop, Maybank no Granger relationship despite strong contemporaneous signal, and RHB only the reverse (returns$\to$sentiment), suggesting journalists react to RHB's price rather than the reverse. Fifth, RHB is the weakest stock with no significant correlations, consistent with its smaller filtered corpus size (3,246 articles, mean 4.57 per day) introducing greater daily noise.
 
-Taken together, these results establish that FinBERT sentiment is a statistically meaningful co-variate of same-day stock returns when the corpus is appropriately filtered, but its predictive lead--lag utility is limited. Chapter~5 uses this signal as an input feature to LSTM and GRU forecasting models, testing whether its incorporation improves multi-step price forecasts over price-only baselines.
+Taken together, these results establish that FinBERT sentiment is a statistically meaningful co-variate of same-day stock returns when the corpus is appropriately filtered, but its predictive lead--lag utility is limited. Chapter~5 uses this signal as an input feature to LSTM and GRU forecasting models, testing whether its incorporation improves return forecasts over price-only baselines.
 
 
 
@@ -866,9 +864,9 @@ The experiment is motivated by the hybrid modelling literature, which frequently
 
 Recurrent neural networks, particularly LSTM \cite{hochreiter1997long} and GRU \cite{chung2014empirical}, are well established for financial time-series modelling. Their gating mechanisms allow selective retention of information over variable-length histories, making them well suited to capturing regime dependencies in return sequences. \citet{fischer2018deep} demonstrated that LSTM significantly outperforms traditional statistical baselines (ARIMA, random forests) for S\&P 500 index prediction over rolling windows, while \citet{siami2019performance} showed that GRU achieves comparable accuracy to LSTM with fewer parameters, making it preferable when training data is limited.
 
-The integration of NLP signals into price sequence models has an established body of literature. \citet{ding2015deep} embedded event tuples extracted from Reuters into a convolutional neural network that improved directional accuracy for US stocks. More recent work has used FinBERT-derived sentiment scores or embeddings as auxiliary inputs in recurrent and probabilistic forecasting architectures \cite{halder2024finbert, soliman2025improving, yang2020finbert}. A consistent finding across this literature is that sentiment improves directional accuracy more reliably than it reduces regression error, which motivates focusing on directional accuracy as a primary metric alongside RMSE and $R^2$.
+The integration of NLP signals into price sequence models has an established body of literature. \citet{ding2015deep} embedded event tuples extracted from Reuters into a convolutional neural network that improved directional accuracy for US stocks. More recent work has used FinBERT-derived sentiment scores or embeddings as auxiliary inputs in recurrent and probabilistic forecasting architectures \cite{halder2024finbert, gu2024predicting, kim2023forecasting, liu2023stock, soliman2025improving, yang2020finbert}. A consistent finding across this literature is that sentiment improves directional accuracy more reliably than it reduces regression error, which motivates focusing on directional accuracy as a primary metric alongside RMSE and $R^2$.
 
-Prior work on Malaysian or Southeast Asian markets is sparse. \citet{cheng2019malaysian} used Malaysian financial news sentiment with a Hybrid Na\"ive Bayes pipeline and reported only moderate correlation with stock movement for a single firm, while \citet{sidek2023bursa} showed that adding headline sentiment can improve an LSTM-based Bursa prediction pipeline. Other local work has focused on price-based machine learning and feature selection rather than sentiment-augmented recurrent forecasting \cite{leong2021stock, chia2023predictive}. This chapter therefore provides a more systematic comparison of price-only and sentiment-augmented LSTM/GRU on Bursa Malaysia large-cap stocks using a multi-year corpus with model-derived sentiment scores.
+Prior work on Malaysian or Southeast Asian markets is sparse. \citet{cheng2019malaysian} used Malaysian financial news sentiment with a Hybrid Na\"ive Bayes pipeline and reported only moderate correlation with stock movement for a single firm, while \citet{sidek2023bursa} showed that adding headline sentiment can improve an LSTM-based Bursa prediction pipeline. Other local work has focused on price-based machine learning and feature selection rather than sentiment-augmented recurrent forecasting \cite{leong2021stock, tengku2022prediction, ku2023improving, chia2023predictive}. This chapter therefore provides a more systematic comparison of price-only and sentiment-augmented LSTM/GRU on Bursa Malaysia large-cap stocks using a multi-year corpus with model-derived sentiment scores.
 
 \section{Data Set}
 
@@ -1021,7 +1019,7 @@ Four patterns emerge from the results. First, Maybank is the strongest stock for
 
 Second, sentiment augmentation improves direction more consistently than it reduces regression error. Across the eight stock-model combinations, directional accuracy improves in five cases when sentiment is added, while RMSE improvement is observed in only three. This aligns with the broader hybrid-forecasting literature, which often finds that sentiment carries more reliable information about directional movement than about precise return magnitude \cite{ding2015deep, halder2024finbert, soliman2025improving}.
 
-Third, Tenaga is a striking null result that merits attention precisely because of its strong Chapter~4 profile. Despite showing clean one-directional Granger causality (sentiment$\to$returns, $p = 0.014$) and a marginally significant T+2 correlation ($p = 0.019$) in Experiment~2, Tenaga's directional accuracy at $T{+}1$ is essentially at chance (0.495--0.515) and $R^2$ is negative for all models. This dissociation between statistical association and forecasting performance is consistent with prior work showing that news-derived signals may be statistically detectable while still failing to deliver robust out-of-sample return forecasts once market noise and model instability are taken into account \cite{atkins2018financial, davidovic2025news}.
+Third, Tenaga is a striking null result that merits attention precisely because of its strong Chapter~4 profile. Despite showing clean one-directional Granger causality at lag~3 (sentiment$\to$returns, $p = 0.014$) and a marginally significant T+2 correlation ($p = 0.019$) in Experiment~2, Tenaga's directional accuracy at $T{+}1$ is essentially at chance (0.495--0.515) and $R^2$ is negative for all models. This dissociation between statistical association and forecasting performance is consistent with prior work showing that news-derived signals may be statistically detectable while still failing to deliver robust out-of-sample return forecasts once market noise and model instability are taken into account \cite{atkins2018financial, davidovic2025news}.
 
 Fourth, early stopping consistently triggers within epochs 1--9 for most models. This indicates that the validation loss landscape is relatively flat beyond an initial phase of learning, consistent with the low signal-to-noise ratio of next-day return prediction in this setting. The few models that run to epoch 8--9 (RHB LSTM+sentiment, Maybank GRU+sentiment) tend to show better or comparable directional accuracy, suggesting that additional regularisation or longer patience might further improve results.
 
@@ -1029,7 +1027,7 @@ Fourth, early stopping consistently triggers within epochs 1--9 for most models.
 
 This chapter evaluated LSTM and GRU sequence models under price-only and price-plus-sentiment feature configurations, benchmarked against a na\"ive persistence baseline across four Bursa Malaysia large-cap stocks.
 
-Three findings stand out. First, Maybank is the most predictable stock in this experiment: both LSTM and GRU outperform persistence ($R^2 = 0.038$ and $0.057$ respectively) and achieve directional accuracy of 0.611--0.632, well above the 50\% chance level. Second, sentiment augmentation produces inconsistent regression improvements but more reliable directional improvements, particularly for RHB where both architectures gain 3--7 percentage points in directional accuracy when sentiment features are included. Third, Tenaga is a null result at the $T{+}1$ horizon despite its strong Granger-causal profile in Experiment~2, demonstrating that short-lived Granger signals do not necessarily translate into exploitable forecasting advantage for recurrent sequence models, and confirming that next-return prediction for Malaysian large-cap stocks is a hard task where improvement over persistence is mostly confined to the directional signal rather than return magnitude.
+Three findings stand out. First, Maybank is the most predictable stock in this experiment: both LSTM and GRU outperform persistence ($R^2 = 0.038$ and $0.057$ respectively) and achieve directional accuracy of 0.611--0.632, well above the 50\% chance level. Second, sentiment augmentation produces inconsistent regression improvements but more reliable directional improvements, particularly for RHB where both architectures gain approximately 2--7 percentage points in directional accuracy when sentiment features are included. Third, Tenaga is a null result at the $T{+}1$ horizon despite its strong Granger-causal profile in Experiment~2, demonstrating that short-lived Granger signals do not necessarily translate into exploitable forecasting advantage for recurrent sequence models, and confirming that next-return prediction for Malaysian large-cap stocks is a hard task where improvement over persistence is mostly confined to the directional signal rather than return magnitude.
 
 Taken together, the Experiment~3 results complement Experiment~2's correlation findings. The statistically significant same-day associations found in Chapter~4 do not automatically produce strong multi-step forecasts, but the recurrent models do extract enough structure from the 10-day price and sentiment history to modestly outperform a random direction baseline. These findings are broadly consistent with semi-strong EMH interpretations in the news-sentiment literature: public news is incorporated into prices quickly, yet small short-horizon directional effects can still appear in selected settings \cite{tetlock2007giving, bollen2011twitter, davidovic2025news}.
 
@@ -1038,25 +1036,25 @@ Taken together, the Experiment~3 results complement Experiment~2's correlation f
 
 \chapter{Conclusion and Future Work}
 
-\chapterabstract{This thesis investigated whether state-of-the-art financial language models can extract actionable sentiment signals from Malaysian financial news and whether those signals improve short-horizon stock return forecasting on Bursa Malaysia. Across three interconnected experiments, fine-tuned FinBERT consistently outperformed generative alternatives for sentiment classification, company-filtered sentiment scores showed statistically significant contemporaneous correlation with daily returns for three of four stocks, and hybrid LSTM/GRU models incorporating sentiment features achieved modest but above-chance directional accuracy---most notably for Maybank (63.2\,\%) and RHB (3--7 percentage-point lift from sentiment augmentation). The results are consistent with semi-strong market efficiency: sentiment news is rapidly incorporated into prices, leaving only a narrow window for predictive models to exploit. This chapter collects the principal findings, lists the thesis's original contributions, and proposes directions for future research.}
+\chapterabstract{This thesis investigated whether state-of-the-art financial language models can extract actionable sentiment signals from Malaysian financial news and whether those signals improve short-horizon stock return forecasting on Bursa Malaysia. Across three interconnected experiments, fine-tuned FinBERT consistently outperformed generative alternatives for sentiment classification, company-filtered sentiment scores showed statistically significant contemporaneous correlation with daily returns for three of four stocks, and hybrid LSTM/GRU models incorporating sentiment features achieved modest but above-chance directional accuracy---most notably for Maybank (63.2\,\%) and RHB (approximately 2--7 percentage-point lift from sentiment augmentation). The results are consistent with semi-strong market efficiency: sentiment news is rapidly incorporated into prices, leaving only a narrow window for predictive models to exploit. This chapter collects the principal findings, lists the thesis's original contributions, and proposes directions for future research.}
 
 \section{Summary}
 
-This thesis addressed three research questions about financial sentiment analysis and market prediction on Bursa Malaysia. The following paragraphs summarise the outcomes of each experimental phase and draw them together under a unifying interpretation.
+This thesis addressed three core research questions and four research objectives about financial sentiment analysis and market prediction on Bursa Malaysia. The following paragraphs summarise the outcomes of each experimental phase and draw them together under a unifying interpretation.
 
 \paragraph{Experiment 1: Sentiment Model Benchmarking.}
 A 100-article Malaysian benchmark from 2025 was used as the primary development set for sentiment model selection, followed by a held-out 200-article benchmark from 2026 for final confirmation of the selected model. The main comparison focused on three FinBERT stages (zero-shot, supervised run2, pseudo-label adapted) and the most relevant generative baselines: the public FinGPT MT checkpoint, the TinyLlama-LoRA model (the author's own fine-tuned TinyLlama-1.1B), Meta-Llama-3.1-8B-Instruct zero-shot, and two Llama-8B LoRA runs. Fine-tuned FinBERT achieved the highest macro F1 of 0.620 on the 2025 benchmark and retained macro F1 0.598 on the held-out 2026 set, confirming that a compact discriminative encoder, properly specialised to the financial domain, outperforms the tested generative alternatives on this task. The strongest open zero-shot LLM in the main comparison was Meta-Llama-3.1-8B-Instruct at macro F1 0.458, while the TinyLlama-LoRA model (the author's own fine-tuned TinyLlama-1.1B) reached 0.328 after supervised adaptation. Crucially, LoRA fine-tuning of Llama-8B \emph{degraded} performance (to F1=0.431 and 0.418 across the two runs), reinforcing the conclusion that generative flexibility did not translate into better supervised sentiment classification in this low-resource Malaysian setting. The neutral class remained the hardest to classify across all models (recall as low as 0.28), reflecting a genuine ambiguity in financial language rather than a simple implementation failure.
 
 \paragraph{Experiment 2: Sentiment--Return Correlation.}
-Daily sentiment scores generated by fine-tuned FinBERT were correlated with daily stock returns for four large-cap Bursa Malaysia companies (Maybank, CIMB, Tenaga, RHB). A broad corpus containing all financial news ($\sim$115 articles per day on average) produced null Pearson and Spearman correlations for all four stocks, supporting the \emph{signal dilution hypothesis}: generic market news is too noisy to carry firm-specific predictive content. Filtering the corpus to articles that explicitly mention each company revealed a striking reversal: Maybank ($r=0.320$, $p<10^{-18}$), CIMB ($r=0.342$, $p<10^{-20}$), and Tenaga ($r=0.337$, $p<10^{-19}$) all showed highly significant positive correlations, while RHB remained borderline ($p=0.081$). Granger causality tests revealed heterogeneous dynamics: Tenaga exhibited unidirectional sentiment-to-returns causality at lag 1 ($p=0.014$), suggesting a short-lived predictive channel; CIMB showed bidirectional feedback; Maybank displayed only contemporaneous alignment with no lagged predictability; and RHB showed reverse causality (returns Granger-caused sentiment scores). These patterns are broadly consistent with semi-strong-form efficient-market interpretations in the news literature, where most public information is incorporated quickly and only selected cases retain lagged predictability \cite{tetlock2007giving, atkins2018financial, davidovic2025news}.
+Daily sentiment scores generated by fine-tuned FinBERT were correlated with daily stock returns for four large-cap Bursa Malaysia companies (Maybank, CIMB, Tenaga, RHB). A broad corpus containing all financial news ($\sim$115 articles per day on average) produced null Pearson and Spearman correlations for all four stocks, supporting the \emph{signal dilution hypothesis}: generic market news is too noisy to carry firm-specific predictive content. Filtering the corpus to articles that explicitly mention each company revealed a striking reversal: Maybank ($r=0.320$, $p<10^{-18}$), CIMB ($r=0.342$, $p<10^{-20}$), and Tenaga ($r=0.337$, $p<10^{-19}$) all showed highly significant positive correlations, while RHB remained borderline ($p=0.081$). Granger causality tests revealed heterogeneous dynamics: Tenaga exhibited unidirectional sentiment-to-returns causality at lag~3 ($p=0.014$), suggesting a short-lived predictive channel; CIMB showed bidirectional feedback; Maybank displayed only contemporaneous alignment with no lagged predictability; and RHB showed reverse causality (returns Granger-caused sentiment scores). These patterns are broadly consistent with semi-strong-form efficient-market interpretations in the news literature, where most public information is incorporated quickly and only selected cases retain lagged predictability \cite{tetlock2007giving, atkins2018financial, davidovic2025news}.
 
 \paragraph{Experiment 3: Hybrid Forecasting.}
-LSTM and GRU sequence models were trained to predict next-day log returns for all four stocks, using two feature sets: price-only (15 technical indicators) and price-plus-sentiment (adding seven FinBERT-derived sentiment features). The persistence baseline (always predicting zero return) served as the primary reference. Models were evaluated on held-out test partitions of approximately 105--110 days, using a strictly chronological 70/15/15 split to prevent data leakage.
+LSTM and GRU sequence models were trained to predict next-day returns for all four stocks, using two feature sets: price-only (15 technical indicators) and price-plus-sentiment (adding seven FinBERT-derived sentiment features). The persistence baseline (always predicting zero return) served as the primary reference. Models were evaluated on held-out test partitions of approximately 105--109 days, using a strictly chronological 70/15/15 split to prevent data leakage.
 
 Price-only LSTM and GRU models outperformed persistence most clearly for Maybank, where both architectures achieved positive $R^2$ and directional accuracy around 61--63\,\%. CIMB showed only a marginally positive $R^2$ for the price-only GRU, while RHB remained slightly better than persistence on RMSE but negative on $R^2$ throughout. Tenaga was the weakest case: all models remained below persistence and directional accuracy stayed close to chance. Sentiment augmentation produced the clearest benefit for RHB, where GRU directional accuracy rose from 52.6\,\% to 60.0\,\% (+7.4 pp) and LSTM rose from 58.9\,\% to 61.1\,\% (+2.1 pp). For Maybank, sentiment slightly improved GRU regression performance (RMSE 0.00662$\to$0.00659; $R^2$ 0.057$\to$0.067) but did not improve directional accuracy. For CIMB, sentiment produced a small directional improvement only for LSTM (0.490$\to$0.551), and for Tenaga it produced no consistent gain. Overall, the models confirm that sentiment features can add modest, stock-specific directional information, but the gains are limited and do not translate into uniformly stronger return forecasting.
 
 \paragraph{Unified Interpretation.}
-The three experiments converge on a coherent picture. Financial language models can extract meaningful sentiment signals from Malaysian financial news, but only when the corpus is sufficiently focused on the target firm. Sentiment-return relationships are contemporaneous for most stocks, limiting the practical forecasting horizon. Where lagged predictability exists (Tenaga, RHB), it is weak enough that sequence models show only modest directional improvements rather than large magnitude gains. The most appropriate theoretical lens is a semi-strong EMH interpretation: public information---including news sentiment---is rapidly priced in, but imperfect and delayed aggregation can still leave narrow windows for above-chance prediction \cite{tetlock2007giving, bollen2011twitter, davidovic2025news}.
+The three experiments converge on a coherent picture. Financial language models can extract meaningful sentiment signals from Malaysian financial news, but only when the corpus is sufficiently focused on the target firm. Sentiment-return relationships are contemporaneous for most stocks, limiting the practical forecasting horizon. Where lagged predictability exists (Tenaga, RHB), it is weak enough that sequence models show only modest directional improvements rather than large magnitude gains. The most appropriate theoretical lens is a semi-strong EMH interpretation: public information---including news sentiment---is rapidly priced in, but imperfect and delayed aggregation can still leave narrow windows for above-chance prediction \cite{tetlock2007giving, bollen2011twitter, davidovic2025news}. Cutting across all three experiments, the fourth research objective---evaluating the computational trade-off between model complexity and predictive performance---is answered consistently: fine-tuned FinBERT achieves the strongest sentiment classification (macro F1=0.620) at substantially lower inference cost than the generative alternatives, and its outputs drive the forecasting gains in Experiment~3. The additional compute of larger generative backbones did not translate into better downstream performance under the conditions studied here.
 
 \section{Contributions}
 
@@ -1074,6 +1072,20 @@ This thesis makes the following original contributions to the literature on fina
 
     \item \textbf{Conservative hybrid LSTM/GRU forecasting benchmark under correct methodological controls.} By targeting next-day \emph{returns} rather than absolute price levels, using strictly chronological data splits, fitting scalers only on training data, and reporting persistence-baseline comparisons, this thesis provides a methodologically transparent Experiment 3 benchmark for future Malaysian forecasting studies.
 
+\end{enumerate}
+
+\section{Implications for Practice}
+
+The findings carry several practical implications for the Malaysian financial industry and for applied NLP practitioners working in emerging markets.
+
+\begin{enumerate}
+    \item \textbf{Enhanced trading and investment decisions.} Sentiment-augmented prediction pipelines, when built with company-filtered rather than broad-corpus news, can provide local traders and asset managers with directional signals that go beyond price-history alone. The RHB result---where GRU directional accuracy improved by $+7.4$ pp with sentiment features---illustrates that even modest gains in return-sign prediction can be actionable in short-horizon strategies.
+
+    \item \textbf{Real-time market monitoring.} Fine-tuned FinBERT's fast inference ($<$1 ms per headline on a CPU) makes it practical to embed in real-time news-monitoring dashboards. The company-filtering step is the critical design choice: a dashboard that streams and filters articles by ticker before aggregating daily sentiment will produce more informative signals than one that aggregates all financial headlines indiscriminately.
+
+    \item \textbf{Lowering AI adoption barriers for Malaysian fintech.} The full pipeline---news scraping, FinBERT inference, company filtering, and LSTM/GRU forecasting---uses open-source components and can run on modest hardware. This provides Malaysian fintech startups and smaller institutions with a practical, low-cost template for integrating NLP-driven signals into their existing market analytics systems.
+
+    \item \textbf{Strengthening data-driven innovation in Malaysian capital markets.} By releasing the labelled benchmark and publishing the forecasting results with proper methodological controls, this thesis offers a reproducible baseline for regulators, academic researchers, and industry analysts interested in expanding AI analytics coverage of Bursa Malaysia beyond the current handful of studies.
 \end{enumerate}
 
 \section{Further Work}
@@ -1113,4 +1125,3 @@ Meta-Llama-3.1-8B-Instruct zero-shot already shows the strongest open generative
 %\input{table}
 
 \end{document}
-
