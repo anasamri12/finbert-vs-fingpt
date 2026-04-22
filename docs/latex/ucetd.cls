@@ -74,7 +74,7 @@
             {\large
             SUPERVISOR\\
             \MakeUppercase{\@advisor}}\\
-			\vspace{1.5in}
+			\vspace{1.0in}
 			A DISSERTATION SUBMITTED TO\\
 			THE FACULTY OF THE DIVISION OF THE \MakeUppercase{\@division}\\
 			IN CANDIDACY FOR THE DEGREE OF\\
@@ -83,7 +83,7 @@
 			DEPARTMENT OF \MakeUppercase{\@department}\\
             \vspace{0.1in}
             UNIVERSITY COLLEGE LONDON\\
-            \vspace{1.0in}
+            \vspace{0.1in}
 			LONDON, UNITED KINGDOM\\
 			\MakeUppercase{\@date}
 			\vspace*{0.45in}
