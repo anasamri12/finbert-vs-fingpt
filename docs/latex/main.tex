@@ -1,7 +1,7 @@
  % ---- ETD Document Class and Useful Packages ---- %
 % v1.5.0 released July 7, 2025.
 % https://github.com/uchicago-library/uchicago-dissertation
-\documentclass[singlespace]{ucetd}
+\documentclass{ucetd}
 
 \usepackage{hyperref}
 \usepackage[T1]{fontenc}
@@ -13,6 +13,8 @@
 \usepackage{amsthm}
 \usepackage[skip=1em plus 0.5em minus 0.2em]{parskip}
 \usepackage{booktabs}
+\usepackage{setspace}
+\onehalfspacing
 
 
 % ----- Chapter micro-abstract (indented both sides, italic) -----
@@ -39,6 +41,7 @@ with News-Driven Insights\\}
 \division{Thesis Division}
 \degree{MEng Computer Science}
 \date{2026}
+\advisor{Professor Philip Treleaven}
 
 \title{\thesistitle}
 \author{\thesisauthor}
@@ -67,6 +70,22 @@ with News-Driven Insights\\}
 
 % Comment out the next line if you do not want a copyright page
 \makecopyright
+
+% ----- UCL Required Disclaimer -----
+\newpage
+\thispagestyle{empty}
+\vspace*{\fill}
+\noindent
+This report is submitted as part requirement for the MEng Degree in Computer
+Science at UCL. It is substantially the result of my own work except where
+explicitly indicated in the text.
+
+\vspace{1em}
+\noindent
+The report may be freely copied and distributed provided the source is explicitly
+acknowledged.
+\vspace*{\fill}
+\newpage
 
 \abstract
 This thesis investigates the integration of financial news sentiment into stock market forecasting for the Malaysian equity market. The research compares discriminative and generative language-model approaches for extracting sentiment from Malaysian financial and political news, and studies whether these signals can improve downstream prediction pipelines. The motivation stems from the observation that Malaysian stock prices are often influenced by local and regional news, yet existing predictive systems rarely account for this contextual sentiment. This study therefore addresses two linked challenges: adapting sentiment models trained primarily on Western data to a Malaysian linguistic and market context, and integrating qualitative news information with quantitative time-series market data.
