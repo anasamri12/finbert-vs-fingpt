@@ -1,7 +1,7 @@
  % ---- ETD Document Class and Useful Packages ---- %
 % v1.5.0 released July 7, 2025.
 % https://github.com/uchicago-library/uchicago-dissertation
-\documentclass{ucetd}
+\documentclass[12pt]{ucetd}
 
 \usepackage{hyperref}
 \usepackage[T1]{fontenc}
@@ -13,6 +13,7 @@
 \usepackage{amsthm}
 \usepackage[skip=1em plus 0.5em minus 0.2em]{parskip}
 \usepackage{booktabs}
+\usepackage{float}
 \usepackage{setspace}
 \onehalfspacing
 
@@ -624,14 +625,14 @@ Macro F1 was treated as the primary metric because the Malaysian news benchmark 
 
 \section{Results}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{ch3_model_comparison.png}
 \caption{Macro F1 scores across all evaluated models on the 2025 Malaysian benchmark ($n=100$). Colour groups indicate model family. FinBERT fine-tuned (run2) is the clear winner; no generative model surpasses it.}
 \label{fig:ch3-model-comparison}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.48\textwidth]{ch3_class_distribution.png}
 \hfill
@@ -640,7 +641,7 @@ Macro F1 was treated as the primary metric because the Malaysian news benchmark 
 \label{fig:ch3-class-dist-cm}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{ch3_per_class_recall.png}
 \caption{Per-class recall heatmap across key evaluated models on the 2025 benchmark. The neutral class (centre column) shows the lowest recall across all models, confirming that class ambiguity in financial language is a structural challenge rather than a model-specific failure. FinBERT fine-tuned achieves the strongest balance across all three classes.}
@@ -649,7 +650,7 @@ Macro F1 was treated as the primary metric because the Malaysian news benchmark 
 
 To keep the chapter aligned with the central thesis question of \emph{FinBERT versus FinGPT}, the main results are organised into two focused comparisons. The first comparison follows the FinBERT family from zero-shot baseline to supervised fine-tuning and pseudo-label adaptation. The second comparison follows the most relevant generative baselines: the official public FinGPT checkpoint, the TinyLlama-LoRA model (the author's own fine-tuned TinyLlama-1.1B), and the strongest modern open LLM candidate, Meta-Llama-3.1-8B-Instruct. Broader exploratory runs, including Qwen-7B, Qwen-3B, Llama-3.2-1B, Llama-3.2-3B, TinyLlama zero-shot, and the public FinGPT Llama2-13B checkpoint, are treated as supplementary evidence rather than the core narrative.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \small
 \begin{tabular}{|l|l|c|c|}
@@ -665,7 +666,7 @@ Pseudo-label adapted & FinBERT adapted & 0.66 & 0.546 \\
 \label{tab:finbert-family-2025}
 \end{table}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \small
 \begin{tabular}{|l|c|c|c|}
@@ -679,7 +680,7 @@ FinBERT run2 & Held-out 2026 set ($n=200$) & 0.69 & 0.598 \\
 \label{tab:finbert-holdout-2026}
 \end{table}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \small
 \begin{tabular}{|l|l|c|c|}
@@ -747,7 +748,7 @@ Once the corpus was restricted to company-relevant articles, the same-day relati
 
 Table~\ref{tab:experiment2-filtered-summary} contrasts the broad KLSE result with the lag-0 filtered stock results. Table~\ref{tab:experiment2-filtered-lag} presents the full lag profile including p-values and OLS $R^2$. Table~\ref{tab:experiment2-granger} summarises the Granger causality tests.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \small
 \begin{tabular}{|l|l|c|c|c|c|c|}
@@ -768,7 +769,7 @@ Filtered ($n$=710) & 1066.KL (RHB)    & $T$ & 0.066 & 0.081                 & 0.
 \label{tab:experiment2-filtered-summary}
 \end{table}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \small
 \begin{tabular}{|l|c|c|c|c|c|c|}
@@ -796,7 +797,7 @@ Filtered ($n$=710) & 1066.KL (RHB)    & $T$ & 0.066 & 0.081                 & 0.
 \label{tab:experiment2-filtered-lag}
 \end{table}
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \small
 \begin{tabular}{|l|c|c|c|c|}
@@ -814,7 +815,7 @@ Filtered ($n$=710) & 1066.KL (RHB)    & $T$ & 0.066 & 0.081                 & 0.
 \label{tab:experiment2-granger}
 \end{table}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.48\textwidth]{ch4_sentiment_vs_returns_1155_Maybank.png}
 \hfill
@@ -823,7 +824,7 @@ Filtered ($n$=710) & 1066.KL (RHB)    & $T$ & 0.066 & 0.081                 & 0.
 \label{fig:ch4-scatter}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.48\textwidth]{ch4_sentiment_vs_returns_1023_CIMB.png}
 \hfill
@@ -832,7 +833,7 @@ Filtered ($n$=710) & 1066.KL (RHB)    & $T$ & 0.066 & 0.081                 & 0.
 \label{fig:ch4-scatter-cimb-rhb}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.48\textwidth]{ch4_lag_heatmap_1155_Maybank.png}
 \hfill
@@ -841,7 +842,7 @@ Filtered ($n$=710) & 1066.KL (RHB)    & $T$ & 0.066 & 0.081                 & 0.
 \label{fig:ch4-lag-heatmap}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.48\textwidth]{ch4_lag_heatmap_1023_CIMB.png}
 \hfill
@@ -923,7 +924,7 @@ Table~\ref{tab:experiment3-price-only} reports the price-only results for persis
 
 For CIMB, GRU achieves a marginally positive $R^2 = 0.005$ while LSTM remains slightly below persistence. For RHB, both architectures outperform persistence on RMSE and achieve directional accuracy of 0.526--0.589, above the 50\% random baseline. Tenaga is the weakest result: at the $T{+}1$ horizon, both LSTM ($R^2 = -0.028$, directional accuracy $= 0.505$) and GRU ($R^2 = -0.050$, directional accuracy $= 0.495$) fail to beat persistence in any meaningful way, with directional accuracy essentially at chance despite the Granger-causal sentiment-return relationship identified in Chapter~4.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \small
 \begin{tabular}{|l|c|c|c|c|c|c|}
@@ -957,7 +958,7 @@ Table~\ref{tab:experiment3-sentiment} compares the price-only and price-plus-sen
 
 For Maybank, GRU benefits from sentiment ($R^2$: 0.057$\to$0.067, RMSE: 0.00662$\to$0.00659), while LSTM is slightly hurt ($R^2$: 0.038$\to$0.000). For CIMB, the pattern reverses: LSTM directional accuracy improves from 0.490 to 0.551 with sentiment, but GRU $R^2$ deteriorates slightly. The most consistent sentiment benefit appears in RHB: both LSTM and GRU see directional accuracy increase when sentiment is added (LSTM: 0.589$\to$0.611, GRU: 0.526$\to$0.600), while RMSE remains within a narrow band. For Tenaga, sentiment does not produce a consistent improvement: LSTM directional accuracy edges from 0.505 to 0.515, while GRU directional accuracy falls from 0.495 to 0.465.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \small
 \begin{tabular}{|l|c|c|c|c|c|}
@@ -989,49 +990,49 @@ For Maybank, GRU benefits from sentiment ($R^2$: 0.057$\to$0.067, RMSE: 0.00662$
 \label{tab:experiment3-sentiment}
 \end{table}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{ch5_directional_accuracy.png}
 \caption{Directional accuracy across all stocks and model configurations at the $T{+}1$ horizon. The dashed line marks the 50\% chance baseline. Maybank shows the strongest overall performance (LSTM price-only: 0.632). RHB is the stock where sentiment augmentation most consistently improves directional accuracy. Tenaga is the only stock where directional accuracy stays at or below chance across all models.}
 \label{fig:ch5-directional-accuracy}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{ch5_sentiment_lift.png}
 \caption{Directional accuracy lift from sentiment augmentation (price+sentiment minus price-only) for each stock and model type. Positive bars indicate improvement; negative bars indicate degradation. RHB shows the most consistent positive lift across both LSTM (+2.1\,pp) and GRU (+7.4\,pp). Tenaga shows degradation for GRU ($-3.0$\,pp). CIMB and Maybank show mixed results depending on architecture.}
 \label{fig:ch5-sentiment-lift}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{ch5_r2_comparison.png}
 \caption{$R^2$ scores relative to the zero-return persistence baseline at $T{+}1$ ($n_{\text{test}} = 105$--$109$). Positive $R^2$ indicates the model explains more variance than predicting zero return every day. Maybank is the only stock where both LSTM and GRU achieve positive $R^2$ in the price-only setting.}
 \label{fig:ch5-r2}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{ch5_training_history_maybank.png}
 \caption{Training and validation loss curves for Maybank (1155.KL) across all four model configurations. Most models converge within 3--9 epochs, consistent with the low signal-to-noise ratio of next-day return prediction.}
 \label{fig:ch5-training-history}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{ch5_rmse_comparison.png}
 \caption{RMSE comparison across all stocks and model configurations. Lower values are better. Maybank shows the clearest overall improvement over persistence, while the Tenaga results confirm that stronger statistical association in Chapter~4 does not necessarily translate into superior return forecasting performance.}
 \label{fig:ch5-rmse}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{ch5_predictions_maybank.png}
 \caption{Predicted versus actual next-day return (\%) on the Maybank (1155.KL) test set. The black line shows the realised return; coloured lines show the LSTM price-only and GRU+Sentiment model predictions. Both models predict near-zero returns on most days (consistent with the low signal-to-noise ratio) but correctly track the direction of moderate-sized moves more often than chance, producing directional accuracy of 0.611--0.632.}
 \label{fig:ch5-pred-maybank}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{ch5_predictions_rhb.png}
 \caption{Predicted versus actual next-day return (\%) on the RHB (1066.KL) test set, comparing LSTM price-only against LSTM+Sentiment. Adding sentiment features shifts the prediction distribution enough to improve directional accuracy from 58.9\,\% to 61.1\,\%, the clearest sentiment lift observed for LSTM across all stocks.}
