@@ -70,6 +70,10 @@
 			{\Large\bfseries
             BY\\
             \MakeUppercase{\@author}}\\
+            \vspace{0.4in}
+            {\large
+            SUPERVISOR\\
+            \MakeUppercase{\@advisor}}\\
 			\vspace{1.5in}
 			A DISSERTATION SUBMITTED TO\\
 			THE FACULTY OF THE DIVISION OF THE \MakeUppercase{\@division}\\
@@ -215,8 +219,10 @@
 %
 
 % Basic information
+\newcommand{\@advisor}{}
 \renewcommand{\title}[1]{\gdef\@title{#1}}
 \renewcommand{\author}[1]{\gdef\@author{#1}}
+\newcommand{\advisor}[1]{\gdef\@advisor{#1}}
 \newcommand{\department}[1]{\gdef\@department{#1}}
 \newcommand{\division}[1]{\gdef\@division{#1}}
 \newcommand{\degree}[1]{\gdef\@degree{#1}}
