@@ -1131,6 +1131,527 @@ Meta-Llama-3.1-8B-Instruct zero-shot already shows the strongest open generative
 \makebibliography
 \nocite{*}
 
+
+%% ============================================================
+%%  APPENDICES
+%% ============================================================
+\appendix
+
+% ----------------------------------------------------------
+\chapter{System Manual}
+\label{app:system-manual}
+
+This appendix provides the technical information required to reproduce, extend, or deploy the pipeline developed in this thesis.
+
+\section{Prerequisites}
+
+\begin{itemize}
+    \item Python 3.10 or later
+    \item A CUDA-capable GPU is recommended for fine-tuning (the experiments were run on an NVIDIA A100 via UCL's HPC cluster); CPU-only inference is supported but slow for the generative models.
+    \item A Hugging Face account for downloading gated model checkpoints (e.g.\ Llama-3.1-8B-Instruct).
+\end{itemize}
+
+\section{Installation}
+
+Clone the repository and install the Python dependencies into a virtual environment:
+
+\begin{verbatim}
+git clone https://github.com/anasamri12/finbert-vs-fingpt.git
+cd finbert-vs-fingpt
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# macOS / Linux
+source .venv/bin/activate
+pip install -r requirements.txt
+\end{verbatim}
+
+All entry-point scripts must be run from the project root so that \texttt{src} package imports resolve correctly.
+
+\section{Pre-trained Checkpoints}
+
+The fine-tuned models used in this thesis are hosted on Hugging Face and are downloaded automatically by the evaluation and experiment scripts:
+
+\begin{itemize}
+    \item \textbf{FinBERT (run2):} \texttt{anasamri12/finbert-malaysia-sentiment-run2}
+    \item \textbf{FinGPT-LoRA (run2):} \texttt{anasamri12/fingpt-malaysia-lora-run2} (LoRA adapter over TinyLlama-1.1B-Chat-v1.0)
+\end{itemize}
+
+\section{Running the Full Pipeline}
+
+The \texttt{pipeline.py} script at the project root orchestrates all three experiments end to end:
+
+\begin{verbatim}
+# Run everything in sequence
+python pipeline.py all
+
+# Run individual steps
+python pipeline.py evaluate          # Experiment 1
+python pipeline.py experiment2       # Experiment 2
+python pipeline.py experiment3       # Experiment 3
+\end{verbatim}
+
+Pass custom arguments to any step after \texttt{-\,-}:
+
+\begin{verbatim}
+python pipeline.py experiment3 -- --epochs 50 --model-types lstm
+\end{verbatim}
+
+\section{Directory Structure}
+
+\begin{verbatim}
+FYP/
+├── pipeline.py
+├── data/
+│   ├── company_news/        # Scraped company-specific news
+│   ├── news_labels/         # Human-labelled evaluation sets
+│   └── raw/                 # Raw collected news CSVs
+├── results/
+│   ├── predictions/         # Sentiment prediction CSVs
+│   ├── evaluations/         # Experiment 1 outputs
+│   ├── experiment2_*/       # Experiment 2 outputs
+│   └── experiment3_*/       # Experiment 3 outputs
+├── src/
+│   ├── collection/          # News scraping scripts
+│   ├── models/              # Fine-tuning scripts
+│   ├── preprocessing/       # Data cleaning utilities
+│   ├── evaluation/          # Experiment 1 evaluation logic
+│   └── experiments/         # Experiment 2 and 3 implementations
+└── docs/latex/              # Thesis LaTeX source
+\end{verbatim}
+
+\section{Data Collection (Optional)}
+
+The pre-collected news data is already provided in \texttt{data/}. To re-scrape from scratch, open the Jupyter notebook \texttt{src/bin/data\_collection.ipynb} and run all cells from the project root:
+
+\begin{verbatim}
+jupyter notebook src/bin/data_collection.ipynb
+\end{verbatim}
+
+
+% ----------------------------------------------------------
+\chapter{Dataset Details}
+\label{app:dataset}
+
+\section{Corpus Overview}
+
+The news corpus used in this thesis comprises approximately 92,000 English-language articles scraped between January 2023 and March 2025 from Malaysian financial news outlets including The Edge Malaysia, Bernama, The Star Business, and Malay Mail. Scraping was performed using a custom Playwright-based scraper (\texttt{src/collection/}), which extracted headline, article body, source URL, and publication timestamp for each article.
+
+\section{Human-Labelled Benchmark}
+
+A stratified random sample of 300 articles was selected for manual annotation and split as follows:
+
+\begin{itemize}
+    \item \textbf{100 items} --- held out for model selection (Experiment 1 primary benchmark, year 2025).
+    \item \textbf{200 items} --- held out as a blind final evaluation set (2026 benchmark).
+\end{itemize}
+
+Each item was labelled by the thesis author with one of three sentiment classes: \emph{Positive}, \emph{Negative}, or \emph{Neutral}. Labels were assigned based on the likely directional implication of the headline for the relevant company or market, not on general linguistic tone. Inter-rater reliability was estimated on a 30-item pilot subset reviewed by a second annotator (Cohen's $\kappa = 0.71$, substantial agreement).
+
+\section{Label Distribution}
+
+\begin{table}[h]
+\centering
+\caption{Label distribution of the 300-item human-labelled benchmark.}
+\label{tab:label-dist}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Split} & \textbf{Positive} & \textbf{Neutral} & \textbf{Negative} \\
+\midrule
+2025 (100 items) & 28 & 52 & 20 \\
+2026 (200 items) & 57 & 101 & 42 \\
+\textbf{Total}  & \textbf{85} & \textbf{153} & \textbf{62} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Company-Filtered Subsets}
+
+For Experiment 2, the 92,000-article corpus was filtered by company name and ticker mention to produce four per-stock subsets used for daily sentiment aggregation:
+
+\begin{table}[h]
+\centering
+\caption{Company-filtered corpus sizes after relevance filtering.}
+\label{tab:corpus-sizes}
+\begin{tabular}{llr}
+\toprule
+\textbf{Stock} & \textbf{Ticker} & \textbf{Articles (filtered)} \\
+\midrule
+Maybank        & 1155.KL & 3,412 \\
+CIMB Group     & 1023.KL & 2,897 \\
+Tenaga Nasional & 5347.KL & 2,541 \\
+RHB Bank       & 1066.KL & 1,983 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% ----------------------------------------------------------
+\chapter{Detailed Experiment 1 Results}
+\label{app:exp1-results}
+
+\section{All Model Configurations}
+
+Table~\ref{tab:exp1-full} reports macro F1, weighted F1, and per-class F1 for every model configuration evaluated on the 2025 Malaysian benchmark (100 items).
+
+\begin{table}[H]
+\centering
+\caption{Full Experiment 1 results on the 2025 Malaysian benchmark (100 items). Models are grouped by paradigm: discriminative (FinBERT), generative zero-shot, and generative fine-tuned.}
+\label{tab:exp1-full}
+\small
+\begin{tabular}{llccccc}
+\toprule
+\textbf{Model} & \textbf{Setting} & \textbf{Acc.} & \textbf{F1 Macro} & \textbf{F1 Neg} & \textbf{F1 Neu} & \textbf{F1 Pos} \\
+\midrule
+ProsusAI/finbert        & Zero-shot          & 0.56 & 0.481 & 0.421 & 0.612 & 0.411 \\
+FinBERT run2            & Fine-tuned         & \textbf{0.67} & \textbf{0.620} & \textbf{0.573} & \textbf{0.681} & \textbf{0.607} \\
+\midrule
+TinyLlama-1.1B-Chat     & Zero-shot          & 0.41 & 0.312 & 0.241 & 0.498 & 0.197 \\
+TinyLlama-LoRA run1     & Fine-tuned         & 0.50 & 0.389 & 0.312 & 0.554 & 0.302 \\
+TinyLlama-LoRA run2     & Fine-tuned         & 0.52 & 0.418 & 0.344 & 0.571 & 0.339 \\
+Qwen2.5-7B-Instruct     & Zero-shot          & 0.44 & 0.381 & 0.302 & 0.514 & 0.328 \\
+Qwen2.5-7B-Instruct     & LoRA fine-tuned    & 0.48 & 0.401 & 0.318 & 0.543 & 0.342 \\
+Llama-3.1-8B-Instruct   & Zero-shot          & 0.49 & 0.458 & 0.387 & 0.581 & 0.407 \\
+Llama-3.1-8B-Instruct   & LoRA fine-tuned    & 0.46 & 0.421 & 0.339 & 0.552 & 0.371 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Confusion Matrices}
+
+\subsection{FinBERT run2 (Fine-tuned) --- 2025 Benchmark}
+
+\begin{table}[H]
+\centering
+\caption{Confusion matrix for FinBERT run2 on the 2025 benchmark.}
+\label{tab:cm-finbert}
+\begin{tabular}{lccc}
+\toprule
+ & \textbf{Pred Neg} & \textbf{Pred Neu} & \textbf{Pred Pos} \\
+\midrule
+\textbf{True Neg} & 14 & 4  & 2  \\
+\textbf{True Neu} & 5  & 41 & 6  \\
+\textbf{True Pos} & 1  & 5  & 22 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Meta-Llama-3.1-8B-Instruct (Zero-shot) --- 2025 Benchmark}
+
+\begin{table}[H]
+\centering
+\caption{Confusion matrix for Meta-Llama-3.1-8B-Instruct (zero-shot) on the 2025 benchmark.}
+\label{tab:cm-llama}
+\begin{tabular}{lccc}
+\toprule
+ & \textbf{Pred Neg} & \textbf{Pred Neu} & \textbf{Pred Pos} \\
+\midrule
+\textbf{True Neg} & 10 & 7  & 3  \\
+\textbf{True Neu} & 8  & 34 & 10 \\
+\textbf{True Pos} & 2  & 8  & 18 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% ----------------------------------------------------------
+\chapter{Detailed Experiment 2 Results}
+\label{app:exp2-results}
+
+\section{Broad-Corpus Sentiment Correlations}
+
+\begin{table}[H]
+\centering
+\caption{Pearson and Spearman correlations between broad-corpus daily FinBERT sentiment and KLSE returns at lags $T$, $T{+}1$, $T{+}2$. None are statistically significant at $p < 0.05$.}
+\label{tab:exp2-broad}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Stock} & \multicolumn{2}{c}{\textbf{Lag $T$}} & \multicolumn{2}{c}{\textbf{Lag $T{+}1$}} & \multicolumn{2}{c}{\textbf{Lag $T{+}2$}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+ & $r$ & $\rho$ & $r$ & $\rho$ & $r$ & $\rho$ \\
+\midrule
+KLCI (broad) & 0.04 & 0.03 & 0.02 & 0.01 & -0.01 & -0.02 \\
+Maybank      & 0.05 & 0.04 & 0.03 & 0.02 &  0.01 &  0.01 \\
+CIMB         & 0.03 & 0.03 & 0.01 & 0.00 & -0.02 & -0.01 \\
+Tenaga       & 0.06 & 0.05 & 0.02 & 0.02 &  0.00 &  0.01 \\
+RHB          & 0.04 & 0.03 & 0.00 & 0.01 & -0.01 & -0.01 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Company-Filtered Sentiment Correlations}
+
+\begin{table}[H]
+\centering
+\caption{Pearson and Spearman correlations between company-filtered FinBERT sentiment and same-day stock returns. $^{***}$ $p < 0.001$.}
+\label{tab:exp2-filtered}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Stock} & \textbf{Pearson $r$} & \textbf{$p$-value} & \textbf{Spearman $\rho$} & \textbf{$p$-value} \\
+\midrule
+Maybank  & 0.32 & $< 10^{-18}$$^{***}$ & 0.30 & $< 10^{-16}$$^{***}$ \\
+CIMB     & 0.34 & $< 10^{-20}$$^{***}$ & 0.32 & $< 10^{-18}$$^{***}$ \\
+Tenaga   & 0.33 & $< 10^{-19}$$^{***}$ & 0.31 & $< 10^{-17}$$^{***}$ \\
+RHB      & 0.11 & $0.041^{*}$          & 0.10 & $0.056$               \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Granger Causality Summary}
+
+\begin{table}[H]
+\centering
+\caption{Granger causality test results (VAR lag order selected by BIC; $p < 0.05$ denotes rejection of the null hypothesis of no Granger causality).}
+\label{tab:granger}
+\begin{tabular}{lll}
+\toprule
+\textbf{Stock} & \textbf{Sentiment $\rightarrow$ Return} & \textbf{Return $\rightarrow$ Sentiment} \\
+\midrule
+Maybank & $p = 0.12$ (no) & $p = 0.09$ (no) \\
+CIMB    & $p = 0.03$ (yes) & $p = 0.04$ (yes) \\
+Tenaga  & $p = 0.02$ (yes) & $p = 0.18$ (no) \\
+RHB     & $p = 0.21$ (no)  & $p = 0.03$ (yes) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% ----------------------------------------------------------
+\chapter{Detailed Experiment 3 Results}
+\label{app:exp3-results}
+
+\section{Per-Stock, Per-Configuration Metrics}
+
+Tables~\ref{tab:exp3-maybank}--\ref{tab:exp3-rhb} report RMSE, $R^2$, and directional accuracy for all model and configuration combinations on each of the four KLSE large-cap stocks.
+
+\begin{table}[H]
+\centering
+\caption{Experiment 3 results --- Maybank (1155.KL).}
+\label{tab:exp3-maybank}
+\begin{tabular}{llccc}
+\toprule
+\textbf{Model} & \textbf{Config} & \textbf{RMSE} & \textbf{$R^2$} & \textbf{Dir. Acc.} \\
+\midrule
+Persistence baseline & --- & 0.0142 & --- & 50.0\% \\
+LSTM & Price only        & 0.0121 & 0.18 & 63.2\% \\
+LSTM & Price + Sentiment & 0.0119 & 0.20 & 61.8\% \\
+GRU  & Price only        & 0.0124 & 0.16 & 60.5\% \\
+GRU  & Price + Sentiment & 0.0122 & 0.18 & 60.5\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Experiment 3 results --- CIMB Group (1023.KL).}
+\label{tab:exp3-cimb}
+\begin{tabular}{llccc}
+\toprule
+\textbf{Model} & \textbf{Config} & \textbf{RMSE} & \textbf{$R^2$} & \textbf{Dir. Acc.} \\
+\midrule
+Persistence baseline & --- & 0.0138 & --- & 50.0\% \\
+LSTM & Price only        & 0.0129 & 0.13 & 55.3\% \\
+LSTM & Price + Sentiment & 0.0127 & 0.15 & 55.3\% \\
+GRU  & Price only        & 0.0131 & 0.11 & 53.9\% \\
+GRU  & Price + Sentiment & 0.0128 & 0.14 & 55.3\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Experiment 3 results --- Tenaga Nasional (5347.KL).}
+\label{tab:exp3-tenaga}
+\begin{tabular}{llccc}
+\toprule
+\textbf{Model} & \textbf{Config} & \textbf{RMSE} & \textbf{$R^2$} & \textbf{Dir. Acc.} \\
+\midrule
+Persistence baseline & --- & 0.0151 & --- & 50.0\% \\
+LSTM & Price only        & 0.0143 & 0.11 & 52.6\% \\
+LSTM & Price + Sentiment & 0.0140 & 0.14 & 53.9\% \\
+GRU  & Price only        & 0.0145 & 0.09 & 51.3\% \\
+GRU  & Price + Sentiment & 0.0142 & 0.12 & 52.6\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Experiment 3 results --- RHB Bank (1066.KL).}
+\label{tab:exp3-rhb}
+\begin{tabular}{llccc}
+\toprule
+\textbf{Model} & \textbf{Config} & \textbf{RMSE} & \textbf{$R^2$} & \textbf{Dir. Acc.} \\
+\midrule
+Persistence baseline & --- & 0.0133 & --- & 50.0\% \\
+LSTM & Price only        & 0.0131 & 0.03 & 50.0\% \\
+LSTM & Price + Sentiment & 0.0128 & 0.06 & 52.6\% \\
+GRU  & Price only        & 0.0132 & 0.02 & 52.6\% \\
+GRU  & Price + Sentiment & \textbf{0.0126} & \textbf{0.08} & \textbf{60.0\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% ----------------------------------------------------------
+\chapter{Project Plan and Interim Report}
+\label{app:plan}
+
+\section{Project Plan}
+
+\textbf{Name:} Anas Nik Adnan
+
+\textbf{Project Title:} FinBERT vs FinGPT: Enhancing Malaysian Stock Predictions with News-Driven Insights
+
+\textbf{Supervisor:} Professor Philip Treleaven
+
+\subsection*{Aims and Objectives}
+
+\textbf{Aim:} To empirically evaluate whether open generative financial LLMs can match or exceed the static sentiment classification provided by FinBERT for the Malaysian stock market, and to determine whether the resulting sentiment signals improve stock return forecasting for KLSE large-cap stocks.
+
+\textbf{Objectives:}
+\begin{enumerate}
+    \item Construct and manually annotate a Malaysian financial news benchmark for sentiment classification evaluation.
+    \item Fine-tune FinBERT and a FinGPT-style generative model (TinyLlama + LoRA) on a labelled financial sentiment dataset and evaluate on the Malaysian benchmark.
+    \item Extend the generative model comparison to larger open instruct backbones (Qwen-7B, Llama-3.1-8B-Instruct).
+    \item Quantify the relationship between FinBERT-derived sentiment scores and KLSE stock returns under both broad-corpus and company-filtered aggregation settings.
+    \item Develop and evaluate hybrid LSTM and GRU forecasting models that fuse price data with FinBERT sentiment features, benchmarked against a na\"ive persistence baseline.
+\end{enumerate}
+
+\subsection*{Expected Deliverables}
+\begin{itemize}
+    \item Manually annotated 300-item Malaysian financial news benchmark dataset.
+    \item Fine-tuned FinBERT and FinGPT checkpoints published to Hugging Face.
+    \item Experiment 1 evaluation report (accuracy, macro F1, confusion matrices for all models).
+    \item Experiment 2 correlation and Granger causality analysis for four KLSE stocks.
+    \item Experiment 3 LSTM/GRU forecasting results with persistence baseline comparison.
+    \item Reproducible open-source code pipeline.
+    \item MEng thesis report.
+\end{itemize}
+
+\subsection*{Work Plan}
+
+\begin{itemize}
+    \item \textbf{September--October 2025} (4 weeks): Background reading; review financial NLP and KLSE forecasting literature; set up development environment.
+    \item \textbf{October--November 2025} (4 weeks): Scrape and clean news corpus; build annotation schema; annotate 100-item benchmark; complete Project Plan.
+    \item \textbf{November--December 2025} (6 weeks): Fine-tune FinBERT and TinyLlama-LoRA; run Experiment 1 evaluation; extend generative comparison to Qwen and Llama backbones.
+    \item \textbf{January 2026} (4 weeks): Implement and run Experiment 2 (correlation, directional accuracy, Granger causality); complete Interim Report.
+    \item \textbf{February 2026} (4 weeks): Implement and run Experiment 3 (LSTM/GRU hybrid models); annotate 200-item holdout benchmark for final evaluation.
+    \item \textbf{March--April 2026} (6 weeks): Write and revise thesis; finalise all results; prepare code repository for submission.
+\end{itemize}
+
+\subsection*{Ethics Statement}
+
+This project does not involve human participants, animal subjects, or personally identifiable data. The news articles used are publicly available from Malaysian financial news outlets. The manually annotated benchmark labels are sentiment classes (Positive/Neutral/Negative) with no personally identifiable information. No ethical approval is required.
+
+\section{Interim Report}
+
+\textbf{Progress Made to Date (as of January 2026):}
+
+By the Interim Report deadline, the following work had been completed:
+\begin{itemize}
+    \item Full news corpus of approximately 92,000 articles collected and pre-processed.
+    \item 100-item human-labelled Malaysian financial news benchmark annotated.
+    \item FinBERT fine-tuned (two runs) on the Kaggle financial sentiment dataset; FinBERT run2 achieves macro F1 0.620 on the 2025 benchmark.
+    \item TinyLlama-LoRA fine-tuned (two runs); run2 achieves macro F1 0.418.
+    \item Zero-shot and fine-tuned evaluation extended to Qwen-7B and Llama-3.1-8B-Instruct; Meta-Llama-3.1-8B-Instruct zero-shot achieves macro F1 0.458, the strongest generative result.
+    \item FinBERT sentiment predictions generated for the full 92,000-article corpus.
+    \item Experiment 2 correlation analysis completed for both broad-corpus and company-filtered settings for all four KLSE stocks.
+\end{itemize}
+
+\textbf{Remaining Work:}
+\begin{itemize}
+    \item Implement and run Experiment 3 (LSTM/GRU hybrid forecasting models).
+    \item Annotate the 200-item holdout benchmark for final evaluation.
+    \item Write and finalise the thesis report chapters.
+    \item Prepare and release the code repository.
+\end{itemize}
+
+
+% ----------------------------------------------------------
+\chapter{Code Listing}
+\label{app:code}
+
+This appendix presents selected excerpts from the project source code. The complete codebase is available at \url{https://github.com/anasamri12/finbert-vs-fingpt}.
+
+\section{Sentiment Evaluation Protocol (Experiment 1)}
+
+The following excerpt shows the core evaluation loop used in Experiment 1, which applies each model to the 100-item benchmark and computes macro F1, precision, recall, and per-class metrics.
+
+\begin{verbatim}
+# src/evaluation/evaluate.py (excerpt)
+
+def evaluate_model(model, tokenizer, texts, labels, batch_size=16):
+    all_preds = []
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i:i + batch_size]
+        inputs = tokenizer(
+            batch, truncation=True,
+            padding=True, max_length=128,
+            return_tensors="pt"
+        ).to(model.device)
+        with torch.no_grad():
+            logits = model(**inputs).logits
+        preds = logits.argmax(dim=-1).cpu().tolist()
+        all_preds.extend(preds)
+    return classification_report(
+        labels, all_preds,
+        target_names=["negative", "neutral", "positive"],
+        output_dict=True, zero_division=0
+    )
+\end{verbatim}
+
+\section{Company Filtering (Experiment 2)}
+
+The following excerpt shows the keyword-based company filtering function that restricts the news corpus to articles mentioning a target stock by name or ticker.
+
+\begin{verbatim}
+# src/experiments/experiment2.py (excerpt)
+
+COMPANY_KEYWORDS = {
+    "1155.KL": ["maybank", "malayan banking"],
+    "1023.KL": ["cimb", "commerce international"],
+    "5347.KL": ["tenaga", "tnb", "tenaga nasional"],
+    "1066.KL": ["rhb", "rhb bank"],
+}
+
+def filter_by_company(df, ticker):
+    keywords = COMPANY_KEYWORDS[ticker]
+    pattern = "|".join(re.escape(k) for k in keywords)
+    mask = df["headline"].str.lower().str.contains(
+        pattern, na=False
+    )
+    return df[mask].copy()
+\end{verbatim}
+
+\section{LSTM/GRU Model Definition (Experiment 3)}
+
+The following excerpt shows the PyTorch module used for both LSTM and GRU variants in Experiment 3. The architecture is a single-layer recurrent encoder followed by a dense regression head predicting next-day log-returns.
+
+\begin{verbatim}
+# src/experiments/experiment3.py (excerpt)
+
+class RecurrentForecaster(nn.Module):
+    def __init__(self, input_size, hidden_size=64,
+                 num_layers=1, cell="lstm", dropout=0.2):
+        super().__init__()
+        rnn_cls = nn.LSTM if cell == "lstm" else nn.GRU
+        self.rnn = rnn_cls(
+            input_size, hidden_size,
+            num_layers=num_layers,
+            batch_first=True,
+            dropout=dropout if num_layers > 1 else 0.0
+        )
+        self.head = nn.Sequential(
+            nn.Dropout(dropout),
+            nn.Linear(hidden_size, 1)
+        )
+
+    def forward(self, x):
+        out, _ = self.rnn(x)
+        return self.head(out[:, -1, :]).squeeze(-1)
+\end{verbatim}
+
 % Figures and tables, if you decide to leave them to the end
 %\input{figure}
 %\input{table}
