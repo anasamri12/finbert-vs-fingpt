@@ -62,9 +62,9 @@
 		\begin{center}
         \small
 			\rule{0in}{0.55in} % Artificial extra [old=0.95in] margin. Why not vspace?
-			{\fontsize{27}{34}\selectfont
-             \bfseries
-             \MakeUppercase{\@title}
+ 			{\fontsize{27}{34}\selectfont
+              \bfseries
+             \@title
             }\\
             \vspace{1.2in}
 			{\Large\bfseries
