@@ -157,9 +157,7 @@ I would also like to thank my family for their constant love and support through
 \chapter{Introduction}
 
 
-\chapterabstract{%
-This chapter introduces the research problem addressed in the thesis and motivates the use of financial language models and recurrent forecasting models for Bursa Malaysia. It sets out the research questions, objectives, and three empirical studies that structure the investigation. It also summarises the main contributions and outlines the remainder of the thesis.
-}
+\chapterabstract{This chapter introduces the research problem: whether open financial language models can extract actionable sentiment signals from Malaysian financial news, and whether those signals improve short-horizon return forecasting on Bursa Malaysia. It motivates the study through the gap between Western-centric financial NLP research and the distinct linguistic and market dynamics of the Malaysian setting. It sets out three empirical research questions---comparing discriminative and generative sentiment models, characterising the sentiment--return relationship, and evaluating hybrid recurrent forecasting architectures---and previews the principal findings: fine-tuned FinBERT outperforms all FinGPT baselines for Malaysian financial sentiment classification; company-filtered sentiment correlates significantly with same-day returns for three of four large-cap KLSE stocks while broad-corpus sentiment does not; and sentiment augmentation yields modest, stock-specific directional improvements in LSTM and GRU forecasting rather than universal gains. The chapter concludes with an outline of the remaining chapters.}
 
 \section{Motivation}
 
@@ -251,7 +249,7 @@ The remainder of this thesis is structured as follows.
 
 \chapter{Background and Literature Review}
 
-\chapterabstract{This chapter reviews the theoretical and empirical background relevant to the thesis. It situates the study in the Malaysian stock market context and surveys prior work on financial sentiment analysis, FinBERT and FinGPT-style models, and time-series forecasting methods such as LSTM and GRU. It concludes by identifying the research gap addressed by the empirical chapters.}
+\chapterabstract{This chapter reviews the theoretical and empirical background relevant to the thesis. It situates the study in the Malaysian stock market context, highlighting the sensitivity of Bursa Malaysia to local political and macroeconomic events and the relative scarcity of financial NLP research on this market. It then surveys financial sentiment analysis from lexicon-based methods through supervised machine learning to domain-adapted Transformer encoders (FinBERT) and open generative LLMs (FinGPT), and reviews time-series forecasting architectures including LSTM, GRU, and sentiment-augmented hybrid models. The chapter concludes by identifying three research gaps that motivate the empirical studies: the lack of systematic benchmarking of discriminative versus generative sentiment models on Malaysian financial corpora; the absence of a controlled evaluation of corpus filtering as a determinant of sentiment signal quality; and the limited investigation of sentiment-augmented recurrent forecasting under strict chronological evaluation controls.}
 
 \section{Application Domain}
 \subsection{The Malaysian Stock Market (KLSE)}
@@ -1040,7 +1038,7 @@ Taken together, the Experiment~3 results complement Experiment~2's correlation f
 
 \chapter{Conclusion and Future Work}
 
-\chapterabstract{This chapter concludes the thesis by revisiting the main findings from the three empirical studies. It summarises the principal contributions and discusses the implications of the results for financial sentiment analysis and short-horizon forecasting on Bursa Malaysia. It concludes with recommendations for future research.}
+\chapterabstract{This chapter concludes the thesis by revisiting the main findings from the three empirical studies. Fine-tuned FinBERT (macro F1 = 0.620) outperforms all FinGPT-family models tested, with the strongest generative result, FinGPT (Meta-Llama-3.1-8B-Instruct, zero-shot), reaching macro F1 = 0.458; no FinGPT variant surpasses the discriminative baseline, and LoRA fine-tuning consistently degrades performance below its zero-shot counterpart. Company-filtered FinBERT sentiment correlates significantly with same-day returns for Maybank, CIMB, and Tenaga ($r = 0.32$--$0.34$, $p < 10^{-18}$), while broad-corpus sentiment yields null results across all horizons and lags. Sentiment augmentation in LSTM and GRU models produces the clearest directional benefit for RHB (GRU: $+7.4$ pp) but is inconsistent across stocks, with Tenaga showing no improvement. The chapter discusses the implications of these findings for financial NLP in emerging markets, frames the results within a semi-strong market efficiency interpretation, and identifies directions for future research including larger annotated corpora, longer forecasting horizons, and causal inference methods.}
 
 \section{Summary}
 
