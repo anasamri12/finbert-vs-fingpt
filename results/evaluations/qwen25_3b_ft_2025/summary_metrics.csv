@@ -1,2 +1,0 @@
-model_family,model_source,adapter_source,input_csv,text_column,label_column,rows_scored,accuracy,precision_macro,recall_macro,f1_macro,precision_weighted,recall_weighted,f1_weighted
-fingpt,Qwen/Qwen2.5-3B-Instruct,results/60k_tuning/qwen25_3b_ep1_lr1e4,data/human_labelled/news_human_label_sample_2025_100_cleaned.csv,text,sentiment,100,0.42,0.5758454106280193,0.42639222412807315,0.39383784064635124,0.6358840579710145,0.42,0.43039669550307846

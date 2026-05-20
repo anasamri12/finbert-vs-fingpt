@@ -1,2 +1,0 @@
-model_family,model_source,adapter_source,input_csv,text_column,label_column,rows_scored,accuracy,precision_macro,recall_macro,f1_macro,precision_weighted,recall_weighted,f1_weighted
-fingpt_zeroshot,meta-llama/Meta-Llama-3.1-8B-Instruct,,data/human_labelled/news_human_label_sample_2025_100_cleaned.csv,text,sentiment,100,0.47,0.653030303030303,0.49669525443110346,0.45847953216374265,0.7218181818181819,0.47,0.48119298245614034

@@ -3,11 +3,21 @@
 src/.venv/
 __pycache__/
 *.pyc
+.pytest_cache/
+.ipynb_checkpoints/
 
 # Large/generated artifacts
+models/
 results/
 data/*
 !data/README.md
+
+# Local assistant/editor state
+.claude/
+
+# Build artifacts
+docs/latex/*.log
+docs/references/
 
 # OS/editor temp files
 ~$*

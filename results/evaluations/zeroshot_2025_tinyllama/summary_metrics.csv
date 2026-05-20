@@ -1,2 +1,0 @@
-model_family,model_source,adapter_source,input_csv,text_column,label_column,rows_scored,accuracy,precision_macro,recall_macro,f1_macro,precision_weighted,recall_weighted,f1_weighted
-fingpt_zeroshot,TinyLlama/TinyLlama-1.1B-Chat-v1.0,,data/human_labelled/news_human_label_sample_2025_100_cleaned.csv,text,sentiment,100,0.25,0.08333333333333333,0.3333333333333333,0.13333333333333333,0.0625,0.25,0.1

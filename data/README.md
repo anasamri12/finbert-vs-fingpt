@@ -1,6 +1,8 @@
 # Data Layout
 
-This project now treats `data/` as the canonical home for datasets and reusable bundles.
+This project treats `data/` as the canonical home for local datasets, corpora, and reusable bundles.
+
+Most contents of `data/` are git-ignored, so a fresh clone will not include the CSV files listed below.
 
 ## Folders
 
@@ -16,11 +18,14 @@ This project now treats `data/` as the canonical home for datasets and reusable 
   - Small local sample inputs for quick testing.
 - `splits/`
   - Fixed train/validation/test CSV splits for supervised tuning runs.
+- `company_news/`
+  - Company-filtered corpora used for downstream sentiment prediction.
 - `kaggle_bundles/`
   - Folders prepared for Kaggle dataset upload or download.
 
 ## Compatibility Notes
 
-- Older copies of some datasets may still exist under `results/` or `src/testing/`.
+- Older outputs may still exist under `results/`.
 - New default script paths point to `data/`.
+- The notebook paths should now point to `data/samples/` and `data/splits/`, not `src/testing/`.
 - Old command entry points under `src/*.py` still work through compatibility wrappers.
